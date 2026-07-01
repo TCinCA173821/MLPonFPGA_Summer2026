@@ -1,9 +1,8 @@
-module shiftreg #(parameter width = 8) (
+module shiftreg #(parameter width = 32) (
     input logic rst_n,
     input logic en,
     input logic clk,
-    input logic dir,
-    input logic d,
+    input logic [7:0]d,
     output logic [width-1:0] out
 );
 
@@ -12,10 +11,7 @@ module shiftreg #(parameter width = 8) (
             out <= 0;
         end else begin
             if(en)
-                case(dir)
-                    0: out <= {out[width-2:0], d};
-                    1: out <= {d, out[width - 1 : 1]};
-                endcase
+                out <= {d, out[width - 1 : 8]};
             else
                 out <= out;
         end
