@@ -2,6 +2,8 @@
 // Write your top file below
 `default_nettype none
 
+//Active high or low?
+// bit - seg arrangement
 
 module seven_segment_display (
     input  logic [3:0] digit,
