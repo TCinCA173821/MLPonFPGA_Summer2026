@@ -1,6 +1,6 @@
 module spi_top(
     input logic MOSI[7:0],
-    input logic CS,
+    input logic cs_in,
     input logic SCLK,
     input logic result[4:0],
     input logic infdone,
