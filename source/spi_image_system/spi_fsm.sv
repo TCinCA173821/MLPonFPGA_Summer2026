@@ -1,6 +1,0 @@
-module fsm(
-
-
-);
-
-endmodule
