@@ -16,7 +16,11 @@ always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		ptr <= 2’b00;
 	end else if (increment) begin
-		ptr <= ptr + 1’b1;
+		if(ptr == 3) begin
+			ptr <= 2’b00;
+		end else begin
+			ptr <= ptr + 1’b1;
+		end
 	end
 end
 
