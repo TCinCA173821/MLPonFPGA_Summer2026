@@ -20,7 +20,6 @@ always_ff @(posedge clk or negedge nrst) begin
 	end
 end
 
-
 //read
 always_comb begin
 	if(ren) begin
@@ -31,8 +30,10 @@ always_comb begin
 end
 
 //write
-always_ff @(posedge clk) begin
-	if(wen) begin
+always_ff @(posedge clk or negedge nrst) begin
+	if(!nrst) begin
+	mem_layers <= '0;
+end else if(wen) begin
 		mem_layers[ptr] <= in;
 	end
 end
