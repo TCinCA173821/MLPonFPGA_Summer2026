@@ -2,12 +2,12 @@
 
 module sync(
     input logic rst_n,
-    input logic clk,
     input logic [7:0] mosi_in,
-    output logic [7:0] mosi_out,
-    input logic cs_in,
-    output logic cs_out,
+    input logic clk,
     input logic sclk_in,
+    input logic cs_in,
+    output logic [7:0] mosi_out,
+    output logic cs_out,
     output logic sclk_out
 );
     //mosi[7:0] synchronization (mosi_sync)
@@ -19,9 +19,9 @@ module sync(
     endgenerate
 
     //cs synchronization
-    ff2_sync cs_ff2 (.rst_n(rst_n), clk(clk), .in(cs_in), .out(cs_out));
+    ff2_sync cs_ff2 (.rst_n(rst_n), .clk(clk), .in(cs_in), .out(cs_out));
 
     // sclk synchronization
-    ff2_sync sclk_ff2 (.rst_n(rst_n), clk(clk), .in(sclk_in), .out(sclk_out));
+    ff2_sync sclk_ff2 (.rst_n(rst_n), .clk(clk), .in(sclk_in), .out(sclk_out));
 
 endmodule
