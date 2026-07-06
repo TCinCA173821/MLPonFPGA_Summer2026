@@ -7,8 +7,9 @@ module spi_fsm(
     output logic shiftR,
     output logic dataValid
 );
-    always_ff @(posedge clk)
-
+    always_ff @(posedge sclk) begin
+        
+    end
 
 endmodule
 
