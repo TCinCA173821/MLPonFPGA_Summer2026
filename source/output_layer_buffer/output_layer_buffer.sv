@@ -7,7 +7,7 @@ module output_layer_buffer (
 	output logic [3:0] out
 );
 
-logic [3:0] reg [0:11];
+logic [3:0] output_reg [0:11];
 logic [3:0] wptr;
 logic [3:0] rptr;
 
@@ -23,31 +23,30 @@ end
 //input
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		reg <= '{default: '0};
+		output_reg <= '{default: '0};
 	end else if (wen) begin
-		reg[wptr] <= in[0];
-		reg[wptr+1] <= in[1];
-		reg[wptr+2] <= in[2];
-		reg[wptr+3] <= in[3];
+		output_reg[wptr] <= in[3];
+		output_reg[wptr+1] <= in[2];
+		output_reg[wptr+2] <= in[1];
+		output_reg[wptr+3] <= in[0];
 	end
 end
-
 
 //read increment
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		rptr <= 4'd0;
-	end else if (wen) begin
-		rptr <= (wptr + 1) % 10;
+	end else if (ren) begin
+		rptr <= (rptr + 1) % 10;
 	end
 end
 
 //output
 always_comb begin
 	if(ren) begin
-		out = reg[rptr];
+		out = output_reg[rptr];
 	end else begin
-		out = 4'd0
+		out = 4'd0;
 	end
 end
 endmodule
