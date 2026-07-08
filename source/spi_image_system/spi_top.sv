@@ -1,3 +1,5 @@
+
+
 module spi_fsm(
     input logic rst_n,
     input logic [7:0] mosi_sync,
@@ -8,11 +10,25 @@ module spi_fsm(
     output logic shiftR,
     output logic dataValid
 );
-    // edge detection (incomplete)
-    
-    // cycle counter (incomplete)
-    logic cycle_cnt;
-    always_ff @(posedge)
+    // edge detection (complete)
+    logic sclk_prev; // memory to keep track of previous sclk state
+    logic pulse; // pulse sent to counter to increment cycle count
+    always_ff @(posedge clk or negedge rst_n) begin
+        if(!rst_n)
+            sclk_prev <= 1'b0;
+        else
+            sclk_prev <= sclk_sync
+    end
+    assign pulse = ~sclk_prev & sclk_sync;
+
+    // cycle counter (complete)
+    logic [1:0] cycle_cnt; // number of cycles for receiving next_state
+    always_ff @(posedge clk or negedge rst_n) begin
+        if(!rst_n)
+            cycle_cnt <= 1'b0;
+        else if (pulse)
+            cycle_cnt <= cycle_cnt + 1;
+    end
 
 
     // state encoding (complete)
@@ -39,23 +55,33 @@ module spi_fsm(
         case(current_state)
             IDLE: 
                 if(cs) next_state = REC;
-                else 
             REC:
-
+                if (cycle_cnt != 2'd3) next_state = REC;
+                else next_state = DATAVAL;
             DATAVAL: 
-
+                next_state = IDLE;
             default: next_state = IDLE;
         endcase
 
     end
 
-
     // output logic (combinational) (incomplete)
+    always_comb begin
+        if(current_state == IDLE) begin
+            
+        end
+        else if (current_state == REC) begin
+
+        end
+        else if (current_state == DATAVAL) begin
+        
+        end
+
+    end
 
 
 
 endmodule
-
 
 
 ////////////////////////////////this module is basically 3 2ff synchronizers for sclk, cs, and mosi//////////////////////////////////////////////////
