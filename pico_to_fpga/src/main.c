@@ -7,7 +7,7 @@
 
 int main(void) {
     stdio_init_all();
-    sleep_ms(2000); // give USB CDC time to enumerate before first printf
+    sleep_ms(2000);
 
     parallel_bus_init();
 
