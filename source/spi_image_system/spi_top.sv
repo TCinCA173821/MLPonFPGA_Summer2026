@@ -1,15 +1,58 @@
 module spi_fsm(
-    input logic rst_n
-    input logic mosi_in[7:0],
-    input logic cs,
-    input logic sclk,
-    output logic mosi_out[7:0],
+    input logic rst_n,
+    input logic [7:0] mosi_sync,
+    input logic cs_sync,
+    input logic sclk_sync,
+    input logic clk,
+    output logic [7:0] mosi_out,
     output logic shiftR,
     output logic dataValid
 );
-    always_ff @(posedge sclk) begin
-        
+    // edge detection (incomplete)
+    
+    // cycle counter (incomplete)
+    logic cycle_cnt;
+    always_ff @(posedge)
+
+
+    // state encoding (complete)
+    typedef enum logic [1:0] {
+        IDLE = 2'b00, // Idle
+        REC = 2'b01, // Receiving
+        DATAVAL = 2'b11 // data valid
+    } state_t;
+    state_t current_state, next_state;
+
+
+    // state register (sequential) (complete)
+    always_ff @(posedge clk or negedge rst_n) begin
+        if(!rst_n)
+            current_state <= IDLE;
+        else
+            current_state <= next_state;
     end
+
+
+    // next-state logic (combinational) (incomplete)
+    always_comb begin
+        next_state = current_state;
+        case(current_state)
+            IDLE: 
+                if(cs) next_state = REC;
+                else 
+            REC:
+
+            DATAVAL: 
+
+            default: next_state = IDLE;
+        endcase
+
+    end
+
+
+    // output logic (combinational) (incomplete)
+
+
 
 endmodule
 
