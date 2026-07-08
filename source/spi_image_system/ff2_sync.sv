@@ -17,3 +17,4 @@ module ff2_sync(
     end
     assign out = ff2;
 endmodule
+
