@@ -1,4 +1,4 @@
-module circular_shift_register (
+module hidden_layer_buffer (
 	input logic clk,
 	input logic nrst,
 	input logic increment, 
@@ -14,12 +14,11 @@ logic [1:0] ptr;
 //ptr increment
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		ptr <= 2’b00;
+		ptr <= 2'b00;
 	end else if (increment) begin
-		ptr <= ptr + 1’b1;
+		ptr <= ptr + 1'b1;
 	end
 end
-
 
 //read
 always_comb begin
@@ -31,12 +30,11 @@ always_comb begin
 end
 
 //write
-always_ff @(posedge clk) begin
-	if(wen) begin
+always_ff @(posedge clk or negedge nrst) begin
+	if(!nrst) begin
+	mem_layers <= '{default: '0};
+end else if(wen) begin
 		mem_layers[ptr] <= in;
 	end
 end
-
 endmodule
-
-
