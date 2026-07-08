@@ -9,21 +9,21 @@ module argmax (
 );
 
 logic [3:0] count;
-logic [11:0] reg;
+logic [11:0] out_reg;
 logic [1:0] comp_out; 
 logic reg_reset;
 logic load_en;
 
 //fsm
 typedef enum logic[1:0] {
-	IDLE;
-	ACTIVE;
-	DONE;
-} state_t
+	IDLE,
+	ACTIVE,
+	DONE
+} state_t;
 
 //state logic
 state_t state, next_state;
-always comb begin
+always_comb begin
 	next_state = state;
 	casez(state)
 		IDLE: begin
@@ -63,7 +63,7 @@ always_comb begin
 			reg_reset = 0;
 			
 			if(comp_out == 2'b01) begin
-				loaden = 1;
+				load_en = 1;
 			end
 		end
 		DONE: begin
@@ -72,38 +72,56 @@ always_comb begin
 			reg_reset = 0;
 			load_en = 0;
 		end
+		default: begin
+			data_valid = 0;
+			nxt_out = 0;
+			reg_reset = 0;
+			load_en = 0;
+		end
 	endcase
 end
 
-//state clock
-always_ff @(posedge clk or negedge nrst): begin
-	if(!nrst) begin
-		count = 0;
+//state transitions
+always_ff @(posedge clk or negedge nrst) begin
+	if (!nrst) begin
+		state <= IDLE;
 	end else begin
+		state <= next_state;
+	end
+end
+
+//count increments
+always_ff @(posedge clk or negedge nrst) begin
+	if(!nrst) begin
+		count <= 0;
+	end else begin
+		$display("state: %h", state);
 		if(state == IDLE) begin
 			count <= 0;
 		end else if(state == ACTIVE) begin
 			count <= count + 1;
+		end
 	end
 end
 
 //comparator logic
 always_comb begin
-	if(in > reg) begin
+	if(in > out_reg) begin
 		comp_out = 2'b01;
 	end else begin
-		comp_out = 2'b10
+		comp_out = 2'b10;
 	end
 end
 
 //register
-always_ff @(posedge clk or negedge nrst): begin
+always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst || reg_reset) begin
-		reg <= 0;
+		out_reg <= 0;
 		out <= 0;
-	end else if (load_en) begin
-		reg <= in;
-		out <= count
+	end else if(load_en) begin
+		out_reg <= in;
+		out <= count + 1;
+		$display("%h", out);
 	end
 end
 
