@@ -17,7 +17,7 @@ module spi_fsm(
         if(!rst_n)
             sclk_prev <= 1'b0;
         else
-            sclk_prev <= sclk_sync
+            sclk_prev <= sclk_sync;
     end
     assign pulse = ~sclk_prev & sclk_sync;
 
@@ -54,10 +54,10 @@ module spi_fsm(
         next_state = current_state;
         case(current_state)
             IDLE: 
-                if(cs) next_state = REC;
+                if(cs_sync) next_state = REC;
             REC:
                 if (cycle_cnt != 2'd3) next_state = REC;
-                else next_state = DATAVAL;
+                else if (cycle_cnt == 3) next_state = DATAVAL;
             DATAVAL: 
                 next_state = IDLE;
             default: next_state = IDLE;
@@ -67,20 +67,35 @@ module spi_fsm(
 
     // output logic (combinational) (incomplete)
     always_comb begin
-        if(current_state == IDLE) begin
-            
-        end
-        else if (current_state == REC) begin
+        shiftR = 1'b0;
+        dataValid = 1'b0;
+        mosi_out = 8'b0;
 
-        end
-        else if (current_state == DATAVAL) begin
-        
-        end
+        case (current_state)
+            IDLE: begin
+                dataValid = 1'b0;
+                shiftR = 1'b0;
+                mosi_out = 8'b0;
+            end
+            REC: begin
+                dataValid = 1'b0;
+                shiftR = 1'b1;
+                mosi_out = mosi_sync;
+
+            end
+            DATAVAL: begin
+                dataValid = 1'b1;
+                shiftR = 1'b0;
+                mosi_out = 8'b0;
+            end
+            default: begin
+                shiftR = 1'b0;
+                dataValid = 1'b0;
+                mosi_out = 8'b0;                
+            end
+        endcase
 
     end
-
-
-
 endmodule
 
 
