@@ -2,8 +2,7 @@ module tb_hidden_layer_buffer;
 
 //tb signals
 logic clk = 0, nrst;
-logic wen, ren;
-logic increment;
+logic wen, r_inc;
 logic [3:0][3:0] in;
 logic [3:0][3:0] out;
 
@@ -18,8 +17,7 @@ hidden_layer_buffer DUT(
 	.clk(clk),
 	.nrst(nrst),
 	.wen(wen),
-	.ren(ren),
-	.increment(increment),
+	.r_inc(r_inc),
 	.in(in),
 	.out(out)
 );
@@ -33,11 +31,10 @@ task reset();
 endtask
 
 task read();
-	ren = '1;
+	r_inc = '1;
 	@(posedge clk);
 	#(1);
-	$display("read output: %h\n", out);
-	ren = '0;
+	r_inc = '0;
 endtask
 
 task write(
@@ -45,36 +42,27 @@ task write(
 );
 	wen = '1;
 	in = test_in;
-$display("writing %h", in);	
+	$display("writing %h", in);	
 	@(posedge clk);
 	#(1);
 	wen = '0;
-endtask
-
-task ptr_increment();
-	increment = '1;
-	@(posedge clk);
-	$display("incremented shift register\n");
-	#(1)
-	increment = '0;
 endtask
 
 task test(
 	input logic [3:0][3:0] test_data [0:3]
 );
 	//write data
-for(i = 0; i < 4; i++) begin
+	for(i = 0; i < 4; i++) begin
 		write(test_data[i]);
-		ptr_increment();
 	end
 	
 	//read data
 	for(i = 0; i < 4; i++) begin
-		read();
 		if(out == test_data[i]) begin
+			$display("read output: %h\n", out);
 			tests_passed++;
 		end
-		ptr_increment();
+		read();
 	end
 
 	$display("Tests passed: %0d/4", tests_passed); 
@@ -89,19 +77,18 @@ initial begin
 	$timeformat(-9, 2, " ns", 20);
 	
 	reset();
-  @(posedge clk);
-  #(10);
+	@(posedge clk);
+	#(10);
 
 	//tests
-  dataset[0] = 16'hAAAA;
-  dataset[1] = 16'hBBBB;
-  dataset[2] = 16'hCCCC;
-  dataset[3] = 16'hDDDD;
+	dataset[0] = 16'hAAAA;
+	dataset[1] = 16'hBBBB;
+	dataset[2] = 16'hCCCC;
+	dataset[3] = 16'hDDDD;
 
-  test(dataset);
-  $finish;
+	test(dataset);
+
+	$finish;
 end
 endmodule
-
-
 
