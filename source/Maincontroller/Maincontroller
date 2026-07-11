@@ -1,0 +1,64 @@
+module main_controller(
+    input logic clk,
+    input logic n_rst,
+    input logic start,
+    input logic HLD,
+    input logic OLD,
+    input logic ARGD,
+    output logic HLEN,
+    output logic OLEN,
+    output logic ARGEN,
+    output logic state,
+    output logic infdone
+);
+
+    typedef enum logic [1:0] { 
+        IDLE = 2'd0,
+        HIDDEN_LAYER = 2'd1,
+        OUTPUT_LAYER = 2'd2,
+        ARGMAX = 2'd3
+     } state_t;
+
+     state_t curstate, nxtstate;
+     logic HLEN, OLEN, ARGEN; // enable signals for the sub controllers
+     logic HLD, OLD, ARGD; // done signals  from the sub subcontrollers
+
+
+     always_ff @ (posedge clk, negedge n_rst) begin // state register for topmost controller
+        if (!n_rst) begin
+            curstate <= IDLE;
+        end else begin
+            curstate <= nxtstate;
+        end
+     end
+
+     always_comb begin // next state logic for topmost controller
+        case(curstate)
+            IDLE: nxtstate = start ? HIDDEN_LAYER : IDLE;
+            HIDDEN_LAYER: nxtstate = HLD ? OUTPUT_LAYER : HIDDEN_LAYER;
+            OUTPUT_LAYER: nxtstate = OLD ? ARGMAX : OUTPUT_LAYER;
+            ARGMAX: nxtstate = ARGD ? IDLE : ARGMAX;
+            default: nxtstate = IDLE;
+        endcase
+     end
+    
+    always_comb begin // output logic for main submodule enables from topmost controller
+        HLEN = 'd0;
+        OLEN = 'd0;
+        ARGEN = 'd0;
+        state = 'd0;
+        infdone = 'd0;
+        case(curstate) 
+            IDLE: infdone = 'd1;
+            HIDDEN_LAYER: HLEN = 'd1;
+            OUTPUT_LAYER: begin
+                OLEN = 'd1;
+                state = 'd1;
+            end
+            ARGMAX: ARGEN = 'd1;
+        endcase
+    end
+
+endmodule
+
+
