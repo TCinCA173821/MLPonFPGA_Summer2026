@@ -70,9 +70,18 @@ module tb_ff2_sync;
             #(1);
             tests_total++;
             if ($isunknown(out)) begin
-                $error("FAIL: went out ");
+                $error("FAIL: went out X during async toggle #%0d", j);
+            end else if (out === val) begin
+                tests_passed++;
+            end else begin
+                @(posedge clk);
+                #(1);
+                if (out===val) 
+                    tests_passed++;
+                else
+                    $error("FAIL: out=%b never settled to val=%b", out, val);
         end
-wh
+
     endtask
 
 
