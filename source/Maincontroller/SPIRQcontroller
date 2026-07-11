@@ -1,0 +1,47 @@
+module SPIRQcontroller (
+    input logic clk,
+    input logic n_rst,
+    input logic rq,
+    input logic SPI_dv,
+    input logic [31:0] SPI_out,
+    output logic nxtpckt,
+    output logic dv,
+    output logic [31:0] out
+);
+    typedef enum logic [1:0] {
+        IDLE = 'd0,
+        REQUEST = 'd1,
+        RECEIVING = 'd2
+    } state_t;
+
+    state_t curstate, nxtstate;
+    logic nxtpckt, dv;
+    
+    always_ff @ (posedge clk, negedge n_rst) begin // state reg
+        if (!n_rst) begin
+            curstate <= IDLE;
+        end else begin
+            curstate <= nxtstate;
+        end
+    end
+
+    always_comb begin // nxt state logic
+        case(curstate)
+            IDLE: nxtstate = rq ? REQUEST : IDLE;
+            REQUEST: nxtstate = RECEIVING;
+            RECEIVING: nxtstate = SPI_dv ? IDLE : RECEIVING;
+            default: nxtstate = IDLE;
+        endcase
+    end
+
+    always_comb begin // output logic
+        nxtpckt = 'd0;
+        dv = 'd0;
+        case(curstate)
+            REQUEST: nxtpckt = 'd1;
+            IDLE: dv = 'd1;
+        endcase
+    end
+
+    assign out = SPI_out;
+endmodule
