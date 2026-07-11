@@ -3,11 +3,11 @@ module output_layer_buffer (
 	input logic nrst,
 	input logic wen,
 	input logic ren,
-	input logic [3:0][3:0] in,
-	output logic [3:0] out
+	input logic [3:0][15:0] in,
+	output logic [15:0] out
 );
 
-logic [3:0] output_reg [0:11];
+logic [3:0] output_reg [0:15];
 logic [3:0] wptr;
 logic [3:0] rptr;
 
