@@ -6,7 +6,7 @@ module SPIRQcontroller (
     input logic [31:0] SPI_out,
     output logic nxtpckt,
     output logic dv,
-    output logic [31:0] out
+    output logic [31:0] data
 );
     typedef enum logic [1:0] {
         IDLE = 'd0,
@@ -43,5 +43,5 @@ module SPIRQcontroller (
         endcase
     end
 
-    assign out = SPI_out;
+    assign data = SPI_out;
 endmodule

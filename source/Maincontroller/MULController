@@ -1,0 +1,35 @@
+mmodule MULcontroller (
+    input logic clk,
+    input logic n_rst,
+    input logic mulstart,
+    input logic [9:0] iter1,
+    input logic [9:0] iter2,
+    input logic state, // basically 0 for hl and 1 for ol
+    input logic MAC_dv,
+    input logic dDv, // is input data valid
+    output logic DV,
+    output logic input, // select where to draw info from spi or both
+    output logic MAC_str // start signal for MAC
+);
+
+    typedef enum logic [2:0] { 
+        IDLE,
+        PULLBIAS,
+        LOADBIAS,
+        PULLINPUT,
+        COMPUTE,
+        COMPUTEDONE
+     } state_t;
+
+    state_t curstate, nxtstate; 
+    logic [9:0] count, nxtcount;
+    
+    always_ff @ (posedge clk, negedge n_rst) begin // state register
+        if(!n_rst) curstate <= IDLE;
+        else curstate <= nxtstate;
+    end
+
+    always_comb begin
+        case(curstate)
+            IDLE: nxtstate = mulstart ? PULLBIAS : IDLE;
+            PULLBIAS: nxtstate = dDv ? 
