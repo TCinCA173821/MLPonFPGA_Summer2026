@@ -55,7 +55,26 @@ module tb_ff2_sync;
     endtask
 
     task test_sync_latency(input logic val);
-        
+        drive_sync(val);
+        @(posedge clk) #(1);
+        if (out === val) $error("out changed too early before 2 clock cycles");
+        check_latency(val,1);
+    endtask
+
+    task test_async_stability(input int num_toggles);
+        for(int j = 0; j < num_toggles; j++) begin
+            logic val;
+            val = $urandom_range(0,1);
+            drive_async(val);
+            repeat(3) @(posedge clk);
+            #(1);
+            tests_total++;
+            if ($isunknown(out)) begin
+                $error("FAIL: went out ");
+        end
+wh
+    endtask
+
 
 
 
