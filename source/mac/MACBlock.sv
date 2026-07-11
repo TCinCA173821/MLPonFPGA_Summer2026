@@ -4,9 +4,9 @@ module MACblock #(
     input logic signed [3:0] input1_signed,
     input logic [3:0] input2_unsigned,
     input logic start,
-    input logic load_bias,
     input logic clk,
     input logic n_rst,
+	input logic load_bias,
     output logic [3:0] MACout_RELU,
     output logic signed [ACCWIDTH - 1:0] MACout_REG,
     output logic data_valid
@@ -66,22 +66,23 @@ module MACblock #(
     end
 
     always_comb begin : accumulationlogic
-        case (curstate)
-            BIASLOAD: accvalnxt = $signed({input1_signed, input2_unsigned});
-            RUNNING: accvalnxt = accumulate_val + (input1_signed * signed'({1'b0, input2_unsigned}));
+		case (curstate)
+            BIASLOAD: accvalnxt = $signed({{8{input1_signed[3]}}, input1_signed, input2_unsigned});
+            RUNNING: accvalnxt = signed'(accumulate_val)+(signed'({{12{input1_signed[3]}}, input1_signed}) * signed'({{12{1'b0}}, input2_unsigned}));
             default: accvalnxt = accumulate_val;
         endcase
     end
     assign MACout_REG = accumulate_val;
-    relu_truncate r1(.en(1'b1),.in(accumulate_val),.out(MACout_RELU));
+
+    relu_truncate r1(.relu_en(1'b1),.relu_in(accumulate_val),.relu_out(MACout_RELU));
     
 
 endmodule
 
 module relu_truncate (
-    input  logic        en,
-    input  logic signed [15:0] in,
-    output logic        [3:0]  out
+    input  logic        relu_en,
+    input  logic signed [15:0] relu_in,
+    output logic        [3:0]  relu_out
 );
 
     always_comb begin
