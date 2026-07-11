@@ -1,15 +1,15 @@
 module INPUTfsm(
     input logic clk,
     input logic n_rst,
-    input logic input,
-    input logic Rq,
-    input logic [31:0] SPI_data,
+    input logic input_sel,
+    input logic input_rq,
+    input logic [31:0] SPI_out,
     input logic SPI_dv,
-    input logic [3:0][3:0] HLdata,
-    output logic SPI_Rq,
+    input logic [3:0][3:0] HLBrdata,
+    output logic SPI_rq,
     output logic HLBren,
     output logic [3:0][7:0] MAC_in,
-    output logic DV
+    output logic input_dv
 );
 
     typedef enum logic [1:0] { 
@@ -31,32 +31,32 @@ module INPUTfsm(
 
     always_comb begin 
         case(curstate)
-            IDLE: nxtstate = Rq ? RQ : IDLE;
+            IDLE: nxtstate = input_rq ? RQ : IDLE;
             RQ: nxtstate = RECEIVING;
             RECEIVING: nxtstate = SPI_dv ? VALID : RECEIVING;
-            VALID: nxtstate = Rq ? RQ : VALID;
+            VALID: nxtstate = input_rq ? RQ : VALID;
             default: nxtstate = IDLE;
         endcase
     end
     
     always_comb begin
-        SPI_Rq = 'd0;
+        SPI_rq = 'd0;
         HLBren = 'd0;
         MAC_in = 'd0;
-        DV = 'd0;
+        input_dv = 'd0;
         buffernxt = buffer;
         case(curstate)
             RQ: begin
-                SPI_Rq = 'd1;
+                SPI_rq = 'd1;
             end
             RECEIVING: begin
-                HLBre = input;
-                buffernxt[3] = SPI_data[31:24] | {4'b0,HLdata[3]};
-                buffernxt[2] = SPI_data[23:16]| {4'b0,HLdata[2]};
-                buffernxt[1] = SPI_data[15:8] | {4'b0,HLdata[1]};
-                buffernxt[0] = SPI_data[7:0] | {4'b0,HLdata[0]};
+                HLBre = input_sel;
+                buffernxt[3] = SPI_out[31:24] | {4'b0,HLBrdata[3]};
+                buffernxt[2] = SPI_out[23:16]| {4'b0,HLBrdata[2]};
+                buffernxt[1] = SPI_out[15:8] | {4'b0,HLBrdata[1]};
+                buffernxt[0] = SPI_out[7:0] | {4'b0,HLBrdata[0]};
             end
-            VALID: DV = 'd1;
+            VALID: input_dv = 'd1;
         endcase
     end
     assign MAC_in = buffer;

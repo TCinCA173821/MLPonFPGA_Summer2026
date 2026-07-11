@@ -2,12 +2,12 @@ module main_controller(
     input logic clk,
     input logic n_rst,
     input logic start,
-    input logic HLD,
-    input logic OLD,
-    input logic ARGD,
-    output logic HLEN,
-    output logic OLEN,
-    output logic ARGEN,
+    input logic HLd,
+    input logic OLd,
+    input logic ARGd,
+    output logic HLen,
+    output logic OLen,
+    output logic ARGen,
     output logic state,
     output logic infdone
 );
@@ -20,8 +20,8 @@ module main_controller(
      } state_t;
 
      state_t curstate, nxtstate;
-     logic HLEN, OLEN, ARGEN; // enable signals for the sub controllers
-     logic HLD, OLD, ARGD; // done signals  from the sub subcontrollers
+     logic HLen, OLen, ARGen; // enable signals for the sub controllers
+     logic HLd, OLd, ARGd; // done signals  from the sub subcontrollers
 
 
      always_ff @ (posedge clk, negedge n_rst) begin // state register for topmost controller
@@ -35,27 +35,27 @@ module main_controller(
      always_comb begin // next state logic for topmost controller
         case(curstate)
             IDLE: nxtstate = start ? HIDDEN_LAYER : IDLE;
-            HIDDEN_LAYER: nxtstate = HLD ? OUTPUT_LAYER : HIDDEN_LAYER;
-            OUTPUT_LAYER: nxtstate = OLD ? ARGMAX : OUTPUT_LAYER;
-            ARGMAX: nxtstate = ARGD ? IDLE : ARGMAX;
+            HIDDEN_LAYER: nxtstate = HLd ? OUTPUT_LAYER : HIDDEN_LAYER;
+            OUTPUT_LAYER: nxtstate = OLd ? ARGMAX : OUTPUT_LAYER;
+            ARGMAX: nxtstate = ARGd ? IDLE : ARGMAX;
             default: nxtstate = IDLE;
         endcase
      end
     
     always_comb begin // output logic for main submodule enables from topmost controller
-        HLEN = 'd0;
-        OLEN = 'd0;
-        ARGEN = 'd0;
+        HLen = 'd0;
+        OLen = 'd0;
+        ARGen = 'd0;
         state = 'd0;
         infdone = 'd0;
         case(curstate) 
             IDLE: infdone = 'd1;
-            HIDDEN_LAYER: HLEN = 'd1;
+            HIDDEN_LAYER: HLen = 'd1;
             OUTPUT_LAYER: begin
-                OLEN = 'd1;
+                OLen = 'd1;
                 state = 'd1;
             end
-            ARGMAX: ARGEN = 'd1;
+            ARGMAX: ARGen = 'd1;
         endcase
     end
 

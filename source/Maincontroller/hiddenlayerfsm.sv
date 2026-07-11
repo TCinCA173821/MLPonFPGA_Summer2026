@@ -1,11 +1,11 @@
 module hiddenlayerFSM(
     input logic clk,
     input logic n_rst,
-    input logic HLEN,
-    input logic DV,
-    output logic HLD,
-    output logic store,
-    output logic mulstart,
+    input logic HLen,
+    input logic multiplierfsmDV,
+    output logic HLd,
+    output logic store1,
+    output logic mulstart1,
     output logic [9:0] iter1
 );
     typedef enum logic [1:0] { 
@@ -32,8 +32,8 @@ module hiddenlayerFSM(
     always_comb begin
         nxtnode = node;
         case(curstate) 
-            IDLE: nxtstate = HLEN ? MAC : IDLE;
-            MAC: nxtstate = DV ? STORE : MAC;
+            IDLE: nxtstate = HLen ? MAC : IDLE;
+            MAC: nxtstate = multiplierfsmDV ? STORE : MAC;
             STORE: begin 
                 nxtstate = (node == 'd3) ? IDLE : MAC;
                 nxtnode = node + 'd1;
@@ -44,7 +44,7 @@ module hiddenlayerFSM(
 
 
     assign iter1 = 'd195;
-    assign store = (curstate == STORE);
-    assign mulstart = (curstate == MAC);
-    assign HLD = (curstate == IDLE)
+    assign store1 = (curstate == STORE);
+    assign mulstart1 = (curstate == MAC);
+    assign HLd = (curstate == IDLE)
 endmodule

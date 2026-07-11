@@ -6,10 +6,10 @@ module MULcontroller (
     input logic [9:0] iter2,
     input logic state, // basically 0 for hl and 1 for ol
     input logic MAC_dv,
-    input logic dDv, // is input data valid
-    output logic DV,
+    input logic input_dv, // is input data valid
+    output logic multiplierfsmDV,
     output logic input_sel, // select where to draw info from spi or both
-    output logic MAC_str // start signal for MAC
+    output logic MAC_start // start signal for MAC
 );
 
     typedef enum logic [2:0] { 
@@ -39,9 +39,9 @@ module MULcontroller (
     always_comb begin
         case(curstate)
             IDLE: nxtstate = mulstart ? PULLBIAS : IDLE;
-            PULLBIAS: nxtstate = dDv ? LOADBIAS : PULLBIAS;
+            PULLBIAS: nxtstate = input_dv ? LOADBIAS : PULLBIAS;
             LOADBIAS: nxtstate = PULLINPUT;
-            PULLINPUT: nxtstate = dDv ? COMPUTE : PULLINPUT;
+            PULLINPUT: nxtstate = input_dv ? COMPUTE : PULLINPUT;
             COMPUTE: nxtstate = MAC_dv ? COMPUTEDONE : COMPUTE;
             COMPUTEDONE: nxtstate = (state ? iter2 : iter1) == count ? IDLE : PULLINPUT;
             default: nxtstate = IDLE;
@@ -49,13 +49,13 @@ module MULcontroller (
     end
 
     always_comb begin
-        DV = 'd0;
-        MAC_str = 'd0;
+        multiplierfsmDV = 'd0;
+        MAC_start = 'd0;
         nxtcount = count;
         case(curstate)
-            IDLE: DV = 'd1;
+            IDLE: multiplierfsmDV = 'd1;
             COMPUTE: begin 
-                MAC_str = 'd1;
+                MAC_start = 'd1;
                 nxtcout = MAC_dv ? count + 'd1 : count;
             end
         endcase

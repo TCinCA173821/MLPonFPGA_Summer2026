@@ -1,12 +1,12 @@
 module SPIRQcontroller (
     input logic clk,
     input logic n_rst,
-    input logic rq,
+    input logic SPI_rq,
     input logic SPI_dv,
     input logic [31:0] SPI_out,
     output logic nxtpckt,
-    output logic dv,
-    output logic [31:0] data
+    output logic SPI_to_input_dv,
+    output logic [31:0]  SPI_to_input_data
 );
     typedef enum logic [1:0] {
         IDLE = 'd0,
@@ -15,7 +15,6 @@ module SPIRQcontroller (
     } state_t;
 
     state_t curstate, nxtstate;
-    logic nxtpckt, dv;
     
     always_ff @ (posedge clk, negedge n_rst) begin // state reg
         if (!n_rst) begin
@@ -27,7 +26,7 @@ module SPIRQcontroller (
 
     always_comb begin // nxt state logic
         case(curstate)
-            IDLE: nxtstate = rq ? REQUEST : IDLE;
+            IDLE: nxtstate = SPI_rq ? REQUEST : IDLE;
             REQUEST: nxtstate = RECEIVING;
             RECEIVING: nxtstate = SPI_dv ? IDLE : RECEIVING;
             default: nxtstate = IDLE;
@@ -36,12 +35,12 @@ module SPIRQcontroller (
 
     always_comb begin // output logic
         nxtpckt = 'd0;
-        dv = 'd0;
+        SPI_to_input_dv = 'd0;
         case(curstate)
             REQUEST: nxtpckt = 'd1;
-            IDLE: dv = 'd1;
+            IDLE: SPI_to_input_dv = 'd1;
         endcase
     end
 
-    assign data = SPI_out;
+    assign  SPI_to_input_data = SPI_out;
 endmodule

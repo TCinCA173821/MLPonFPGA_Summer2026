@@ -1,11 +1,11 @@
 module outputlayerFSM(
     input logic clk,
     input logic n_rst,
-    input logic OLEN,
-    input logic DV,
-    output logic OLD,
-    output logic store,
-    output logic mulstart,
+    input logic OLen,
+    input logic multiplierfsmDV,
+    output logic OLd,
+    output logic store2,
+    output logic mulstart2,
     output logic [9:0] iter2
 );
     typedef enum logic [1:0] { 
@@ -32,8 +32,8 @@ module outputlayerFSM(
     always_comb begin
         nxtnode = node;
         case(curstate) 
-            IDLE: nxtstate = OLEN ? MAC : IDLE;
-            MAC: nxtstate = DV ? STORE : MAC;
+            IDLE: nxtstate = OLen ? MAC : IDLE;
+            MAC: nxtstate = multiplierfsmDV ? STORE : MAC;
             STORE: begin 
                 nxtstate = (node == 'd2) ? IDLE : MAC;
                 nxtnode = node + 'd1;
@@ -44,7 +44,7 @@ module outputlayerFSM(
 
 
     assign iter1 = 'd15;
-    assign store = (curstate == STORE);
-    assign mulstart = (curstate == MAC);
-    assign OLD = (curstate == IDLE)
+    assign store2 = (curstate == STORE);
+    assign mulstart2 = (curstate == MAC);
+    assign OLd = (curstate == IDLE)
 endmodule
