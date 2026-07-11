@@ -15,15 +15,15 @@ always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		ptr <= 2'b00;
 	end else if (wen || r_inc) begin
-ptr <= ptr + 1'b1;
+		ptr <= ptr + 1'b1;
 	end
 end
 
 //write
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-	mem_layers <= '{default: '0};
-end else if(wen) begin
+		mem_layers <= '{default: '0};
+	end else if(wen) begin
 		mem_layers[ptr] <= in;
 	end
 end
