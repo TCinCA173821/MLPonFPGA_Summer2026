@@ -2,7 +2,7 @@ module tb_output_layer_buffer;
 
 //tb signals
 logic clk = 0, nrst;
-logic wen, ren;
+logic wen, r_inc;
 logic [3:0][3:0] in;
 logic [3:0] out;
 
@@ -19,7 +19,7 @@ output_layer_buffer DUT(
 	.clk(clk),
 	.nrst(nrst),
 	.wen(wen),
-	.ren(ren),
+	.r_inc(r_inc),
 	.in(in),
 	.out(out)
 );
@@ -35,11 +35,11 @@ endtask
 task read(
 	output logic [3:0] test_out
 );
-	ren = '1;
+	r_inc = '1;
 	@(posedge clk);
 	test_out = out;
 	#(1);
-	ren = '0;
+	r_inc = '0;
 endtask
 
 task write(
