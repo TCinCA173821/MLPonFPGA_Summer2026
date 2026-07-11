@@ -4,8 +4,8 @@ module ARGMAXfsm(
     input logic ARGen,
     input logic ARGdv,
     output logic ARGd,
-    output logic REN,
-    output logic ARGSTR
+    output logic OLren,
+    output logic ARGmax_start
 );
 
     typedef enum logic [1:0] { 
@@ -35,13 +35,13 @@ module ARGMAXfsm(
     end
     always_comb begin
         ARGd = 'd0;
-        REN = 'd0;
-        ARGSTR = 'd0;
+        OLren = 'd0;
+        ARGmax_start = 'd0;
         nxtnode = node;
         case(curstate)
-            READ: REN = 'd1;
+            READ: OLren = 'd1;
             COMPARE: begin 
-                ARGSTR = 'd1;
+                ARGmax_start = 'd1;
                 nxtnode = node + 'd1;
             end
         endcase
