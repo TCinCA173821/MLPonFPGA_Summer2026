@@ -51,3 +51,4 @@ end
 
 //output
 assign out = output_reg[rptr];
+endmodule
