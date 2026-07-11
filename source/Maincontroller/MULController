@@ -1,4 +1,4 @@
-mmodule MULcontroller (
+module MULcontroller (
     input logic clk,
     input logic n_rst,
     input logic mulstart,
@@ -8,7 +8,7 @@ mmodule MULcontroller (
     input logic MAC_dv,
     input logic dDv, // is input data valid
     output logic DV,
-    output logic input, // select where to draw info from spi or both
+    output logic input_sel, // select where to draw info from spi or both
     output logic MAC_str // start signal for MAC
 );
 
@@ -24,12 +24,41 @@ mmodule MULcontroller (
     state_t curstate, nxtstate; 
     logic [9:0] count, nxtcount;
     
+    
     always_ff @ (posedge clk, negedge n_rst) begin // state register
-        if(!n_rst) curstate <= IDLE;
-        else curstate <= nxtstate;
+        if(!n_rst) begin 
+            curstate <= IDLE;
+            count <= '0;
+        end
+        else begin
+            curstate <= nxtstate;
+            count <= nxtcount;
+        end
     end
 
     always_comb begin
         case(curstate)
             IDLE: nxtstate = mulstart ? PULLBIAS : IDLE;
-            PULLBIAS: nxtstate = dDv ? 
+            PULLBIAS: nxtstate = dDv ? LOADBIAS : PULLBIAS;
+            LOADBIAS: nxtstate = PULLINPUT;
+            PULLINPUT: nxtstate = dDv ? COMPUTE : PULLINPUT;
+            COMPUTE: nxtstate = MAC_dv ? COMPUTEDONE : COMPUTE;
+            COMPUTEDONE: nxtstate = (state ? iter2 : iter1) == count ? IDLE : PULLINPUT;
+            default: nxtstate = IDLE;
+        endcase
+    end
+
+    always_comb begin
+        DV = 'd0;
+        MAC_str = 'd0;
+        nxtcount = count;
+        case(curstate)
+            IDLE: DV = 'd1;
+            COMPUTE: begin 
+                MAC_str = 'd1;
+                nxtcout = MAC_dv ? count + 'd1 : count;
+            end
+        endcase
+    end
+    assign input_sel = state;
+endmodule
