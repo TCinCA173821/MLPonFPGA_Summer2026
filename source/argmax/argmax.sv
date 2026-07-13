@@ -3,9 +3,8 @@ module argmax (
 	input logic nrst,
 	input logic start,
 	input logic [11:0] in,
+	input logic [3:0] in_ptr,
 	output logic [3:0] out,
-	output logic data_valid,
-	output logic nxt_out
 );
 
 logic [3:0] count;
@@ -32,7 +31,7 @@ always_comb begin
 			end
 		end
 		ACTIVE: begin
-			if(count == 9) begin
+			if(in_ptr == 9) begin
 				next_state = DONE;
 			end
 		end
@@ -90,20 +89,6 @@ always_ff @(posedge clk or negedge nrst) begin
 	end
 end
 
-//count increments
-always_ff @(posedge clk or negedge nrst) begin
-	if(!nrst) begin
-		count <= 0;
-	end else begin
-		$display("state: %h", state);
-		if(state == IDLE) begin
-			count <= 0;
-		end else if(state == ACTIVE) begin
-			count <= count + 1;
-		end
-	end
-end
-
 //comparator logic
 always_comb begin
 	if(in > out_reg) begin
@@ -120,7 +105,7 @@ always_ff @(posedge clk or negedge nrst) begin
 		out <= 0;
 	end else if(load_en) begin
 		out_reg <= in;
-		out <= count;
+		out <= in_ptr;
 	end
 end
 
