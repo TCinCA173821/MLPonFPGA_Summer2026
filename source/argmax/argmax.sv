@@ -120,8 +120,7 @@ always_ff @(posedge clk or negedge nrst) begin
 		out <= 0;
 	end else if(load_en) begin
 		out_reg <= in;
-		out <= count + 1;
-		$display("%h", out);
+		out <= count;
 	end
 end
 
