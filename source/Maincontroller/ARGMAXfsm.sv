@@ -3,12 +3,13 @@ module argmax_controller (
 	input logic nrst,
 	input logic arg_en,
 	input logic arg_dv,
-	input logic [3:0] node,
 	output logic arg_done,
-	output logic buffer_inc;
+	output logic buffer_inc,
 	output logic arg_start
 );
 
+logic [3:0] node, next_node;
+	
 //states
 typedef enum logic [1:0] {
 	IDLE,
@@ -33,11 +34,11 @@ end
 //state and node num changes
 always_ff @(posedge clk, negedge nrst) begin
 	if(nrst) begin
-		node <= '0;
 		state <= IDLE;
+		node <= '0;
 	end else begin
-		node <= next_node;
 		state <= next_state;
+		node <= next_node;
 	end
 end
 
@@ -46,27 +47,32 @@ always_comb begin
 	arg_done = '0;
 	buffer_inc = '0;
 	arg_start = '0;
+	next_node <= node;
 
 	case(state)
 		IDLE: begin
             arg_done = '0;
             buffer_inc = '0;
             arg_start = '0;
+			next_node <= '0;
         end
         RUN: begin
 			arg_start = '1;
 			buffer_inc = '0;
 			arg_done = '0;
+			next_node = node;
 		end
 		INCR: begin
 			buffer_inc = '1;
 			arg_start = '0;
 			arg_done = '0
+			next_node = node + 1;
 		end
 		DONE: begin
 			arg_done = '1;
 			buffer_inc = '0;
 			arg_start = '0;
+			next_node = '0;
 		end
 	endcase
 end
