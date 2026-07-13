@@ -27,7 +27,6 @@ always_comb begin
 		INCR: next_state = (node == 'd9) ? DONE : RUN;
 		DONE: next_state = IDLE;
 		default: next_state = IDLE;
-		end
 	endcase
 end
 
