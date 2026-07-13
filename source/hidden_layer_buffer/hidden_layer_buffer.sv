@@ -2,7 +2,8 @@ module hidden_layer_buffer (
 	input logic clk,
 	input logic nrst,
 	input logic wen,
-	input logic r_inc,
+	input logic ren,
+	input logic incr,
 	input logic [3:0][3:0] in,
 	output logic [3:0][3:0] out
 );
@@ -14,7 +15,7 @@ logic [1:0] ptr;
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		ptr <= 2'b00;
-	end else if (wen || r_inc) begin
+	end else if (incr) begin
 		ptr <= ptr + 1'b1;
 	end
 end
@@ -29,6 +30,12 @@ always_ff @(posedge clk or negedge nrst) begin
 end
 
 //output
-assign out = mem_layers[ptr];
-
+always_ff @(posedge clk or negedge nrst) begin
+	if(!nrst) begin
+		out = '0;
+	end else if (ren) begin
+		assign out = mem_layers[ptr];
+	end
+end
+	
 endmodule
