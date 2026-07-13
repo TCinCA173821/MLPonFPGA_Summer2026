@@ -33,7 +33,7 @@ end
 
 //state and node num changes
 always_ff @(posedge clk, negedge nrst) begin
-	if(nrst) begin
+	if(!nrst) begin
 		state <= IDLE;
 		node <= '0;
 	end else begin
