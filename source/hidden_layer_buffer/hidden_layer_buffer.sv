@@ -32,9 +32,9 @@ end
 //output
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		out = '0;
+		out <= '0;
 	end else if (ren) begin
-		assign out = mem_layers[ptr];
+		out <= mem_layers[ptr];
 	end
 end
 	
