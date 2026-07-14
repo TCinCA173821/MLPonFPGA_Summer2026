@@ -7,7 +7,7 @@ module layer_controller (
 	output logic Men,
 	output logic Ld,
 	output logic HLBwen,
-	output logic OBLwen,
+	output logic OLBwen,
 	output logic [7:0] Miter
 );
 
@@ -26,7 +26,7 @@ module layer_controller (
 		case(state)
 			IDLE: next_state = (Len) ? MAC : IDLE;
 			MAC: next_state = (Md) ? STORE : MAC;
-			STORE: next_state = (layer_cnt == total_layers) ? DONE : MAC;
+			STORE: next_state = (next_cnt == total_layers) ? DONE : MAC;
 			DONE: next_state = IDLE;
 			default: next_state = IDLE;
 		endcase
@@ -46,16 +46,16 @@ module layer_controller (
 	Men = '0;
 	Ld = '0;
 	next_cnt = layer_cnt;
-	total_layers = (Lsel) ? '2 : '3;
+	total_layers = (Lsel) ? 'd2 : 'd3;
 	Miter = (Lsel) ? 'd15 : 'd195;
-	OBLwen = '0;
+	OLBwen = '0;
 	HLBwen = '0;
 		
 		case(state)
 			IDLE: next_cnt = '0;
 			MAC: Men = '1;
 			STORE: begin
-				next_cnt = layer_cnt + '1;
+				next_cnt = layer_cnt + 'd1;
 				if(Lsel) OLBwen = '1;
 				else HLBwen = '1;
 			end

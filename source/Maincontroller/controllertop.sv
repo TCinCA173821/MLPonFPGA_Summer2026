@@ -2,7 +2,7 @@ module controllertop(
     input logic clk,
     input logic n_rst,
     input logic start,
-    input logic [3:0] HLBrdata [3:0],
+    input logic [3:0] HLBrdata [0:3],
     input logic SPI_dv,
     input logic [31:0] SPI_reg,
     output logic Done,
@@ -19,7 +19,7 @@ module controllertop(
 );
     logic ff1, ff2;
     always_ff @(posedge clk, negedge n_rst) begin // 2ff sync for start
-        if(n_rst) begin
+        if(!n_rst) begin
             ff1 <= '0;
             ff2 <= '0;
         end else begin
@@ -29,11 +29,11 @@ module controllertop(
     end
 
     logic Len, Lsel, Ld, Aen, Ad, Men, Md, Irq, Itype, Id;
-    logic [7:0] Miter
-    main_ctrlfsm main1 (.*, .start(ff2))
+    logic [7:0] Miter;
+    main_ctrlfsm main1 (.*, .start(ff2));
     layer_controller layer1(.*);
     MAC_controller mac1(.*);
-    input_controller input1(.*,.SPI_d(SPI_reg));
+    input_controller input1(.*,.SPI_d(SPI_reg),.SPI_rq(nxtpckt));
     argmax_controller arg1(.*);
 
 endmodule

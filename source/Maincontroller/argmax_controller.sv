@@ -48,10 +48,10 @@ always_comb begin
 	next_node = node;
 
 	case(state)
-		IDLE: next_node <= '0;
+		IDLE: next_node = '0;
         RUN: ARG_s = '1;
 		INCR: begin
-			OBLincr = '1;
+			OLBincr = '1;
 			next_node = node + 1;
 		end
 		DONE: Ad = '1;

@@ -4,7 +4,7 @@ module main_ctrlfsm(
     input logic start,
     input logic Ld,
     input logic Ad,
-    output logic Len
+    output logic Len,
     output logic Lsel,
     output logic Aen,
     output logic Done
