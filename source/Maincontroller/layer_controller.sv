@@ -1,83 +1,65 @@
 module layer_controller (
 	input logic clk,
-	input logic nrst,
-	input logic l_en,
-	input logic layer_select,
-	input logic mac_done,
-	output logic mac_en,
-	output logic l_done,
-	output logic hlb_wen,
-	output logic olb_wen,
-	output logic [7:0] mult_iter
+	input logic n_rst,
+	input logic Len,
+	input logic Lsel,
+	input logic Md,
+	output logic Men,
+	output logic Ld,
+	output logic HLBwen,
+	output logic OBLwen,
+	output logic [7:0] Miter
 );
 
-logic [1:0] layer_cnt, next_cnt, total_layers;
+	logic [1:0] layer_cnt, next_cnt, total_layers;
 
-//states
-typedef enum logic [1:0] {
-  IDLE,
-  MAC,
-  STORE,
-  DONE
-} state_t;
-state_t state, next_state;
+	//states
+	typedef enum logic [1:0] {
+	IDLE,
+	MAC,
+	STORE,
+	DONE
+	} state_t;
+	state_t state, next_state;
 
-always_comb begin
-	case(state)
-		IDLE: next_state = (l_en) ? MAC : IDLE;
-		MAC: next_state = (mac_done) ? STORE : MAC;
-		STORE: next_state = (layer_cnt == total_layers) ? DONE : MAC;
-		DONE: next_state = IDLE;
-		default: next_state = IDLE;
-	endcase
-end
+	always_comb begin
+		case(state)
+			IDLE: next_state = (Len) ? MAC : IDLE;
+			MAC: next_state = (Md) ? STORE : MAC;
+			STORE: next_state = (layer_cnt == total_layers) ? DONE : MAC;
+			DONE: next_state = IDLE;
+			default: next_state = IDLE;
+		endcase
+	end
 
-always_ff @(posedge clk, negedge nrst) begin
-  if(!nrst) begin
-	  state <= IDLE;
-	  layer_cnt <= 0;
-  end else begin
-	  state <= next_state;
-	  layer_cnt <= next_cnt;
-  end
-end
+	always_ff @(posedge clk, negedge n_rst) begin
+	if(!n_rst) begin
+		state <= IDLE;
+		layer_cnt <= 0;
+	end else begin
+		state <= next_state;
+		layer_cnt <= next_cnt;
+	end
+	end
 
-always_comb begin
-  mac_en = '0;
-  l_done = '0;
-  next_cnt = layer_cnt;
-	total_layers = (layer_select) ? '3 : '2;
-  mult_iter = (layer_select) ? 'd15 : 'd195;
-	olb_wen = '0;
-	hlb_wen = '0;
-	
-	case(state)
-		IDLE: begin
-			l_done = '0;
-			mac_en = '0;
-			next_cnt = '0;
-		end
-		MAC: begin
-      mac_en = '1;
-      next_cnt = layer_cnt;
-      olb_wen = '0;
-		  hlb_wen = '0;
-		end
-		STORE: begin
-      next_cnt = layer_cnt + '1;
-      mac_en = '0;
-      if(layer_select) begin
-	      olb_wen = '1;
-	    end else begin
-		    hlb_wen = '1;
-	    end
-    end
-		DONE: begin
-			l_done = '1;
-			mac_en = '0;
-			next_cnt = layer_cnt;
-			olb_wen = '0;
-			hlb_wen = '0;
-		end
-	endcase
-end
+	always_comb begin
+	Men = '0;
+	Ld = '0;
+	next_cnt = layer_cnt;
+	total_layers = (Lsel) ? '2 : '3;
+	Miter = (Lsel) ? 'd15 : 'd195;
+	OBLwen = '0;
+	HLBwen = '0;
+		
+		case(state)
+			IDLE: next_cnt = '0;
+			MAC: Men = '1;
+			STORE: begin
+				next_cnt = layer_cnt + '1;
+				if(Lsel) OLBwen = '1;
+				else HLBwen = '1;
+			end
+			DONE: Ld = '1;
+		endcase
+	end
+endmodule

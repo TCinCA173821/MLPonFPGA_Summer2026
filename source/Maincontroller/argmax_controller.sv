@@ -1,11 +1,10 @@
 module argmax_controller (
 	input logic clk,
-	input logic nrst,
-	input logic arg_en,
-	input logic arg_dv,
-	output logic arg_done,
-	output logic buffer_inc,
-	output logic arg_start
+	input logic n_rst,
+	input logic Aen,
+	output logic Ad,
+	output logic OLBincr,
+	output logic ARG_s
 );
 
 logic [3:0] node, next_node;
@@ -22,7 +21,7 @@ state_t state, next_state;
 //state change logic
 always_comb begin
 	case(state)
-		IDLE: next_state = arg_en ? RUN : IDLE;
+		IDLE: next_state = Aen ? RUN : IDLE;
 		RUN: next_state = INCR;
 		INCR: next_state = (node == 'd9) ? DONE : RUN;
 		DONE: next_state = IDLE;
@@ -31,8 +30,8 @@ always_comb begin
 end
 
 //state and node num changes
-always_ff @(posedge clk, negedge nrst) begin
-	if(!nrst) begin
+always_ff @(posedge clk, negedge n_rst) begin
+	if(!n_rst) begin
 		state <= IDLE;
 		node <= '0;
 	end else begin
@@ -43,36 +42,19 @@ end
 
 //signal updates
 always_comb begin
-	arg_done = '0;
-	buffer_inc = '0;
-	arg_start = '0;
-	next_node <= node;
+	Ad = '0;
+	OLBincr = '0;
+	ARG_s = '0;
+	next_node = node;
 
 	case(state)
-		IDLE: begin
-            arg_done = '0;
-            buffer_inc = '0;
-            arg_start = '0;
-			next_node <= '0;
-        end
-        RUN: begin
-			arg_start = '1;
-			buffer_inc = '0;
-			arg_done = '0;
-			next_node = node;
-		end
+		IDLE: next_node <= '0;
+        RUN: ARG_s = '1;
 		INCR: begin
-			buffer_inc = '1;
-			arg_start = '0;
-			arg_done = '0
+			OBLincr = '1;
 			next_node = node + 1;
 		end
-		DONE: begin
-			arg_done = '1;
-			buffer_inc = '0;
-			arg_start = '0;
-			next_node = '0;
-		end
+		DONE: Ad = '1;
 	endcase
 end
 endmodule

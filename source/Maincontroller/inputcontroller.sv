@@ -4,7 +4,7 @@ module input_controller(
     input logic Irq,
     input logic Itype,
     input logic SPI_dv,
-    input logic signed [31:0] SPI_d,
+    input logic [31:0] SPI_d,
     input logic [3:0] HLBrdata [0:3],
     output logic Id,
     output logic signed [7:0] MAC_in [0:3],
@@ -58,11 +58,11 @@ module input_controller(
             BUFFER: begin 
                 HLBren = Itype;
                 for(j = 0; j < 4; j++) begin
-                    MAC_in_nxt[j] = {SPI_d[31-8*j:28-8*j], Itype ? HLBrdata[3-j] :SPI_d[27-8*j:24-8*j]};
+                    MAC_in_nxt[j] = $signed({SPI_d[31-8*j:28-8*j], Itype ? HLBrdata[3-j] :SPI_d[27-8*j:24-8*j]});
                 end
             end
             PULSEDONE: begin 
-                Id = '1;
+                Id = '1;   
                 HLBincr = Itype;
             end
         endcase
