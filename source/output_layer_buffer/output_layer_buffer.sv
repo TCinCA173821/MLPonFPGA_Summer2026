@@ -5,10 +5,10 @@ module output_layer_buffer (
 	input logic r_inc,
 	input logic [3:0][15:0] in,
 	output logic [15:0] out_data,
-	output logic [3:0] rptr;
+	output logic [3:0] rptr
 );
 
-logic [3:0] output_reg [0:11];
+logic [15:0] output_reg [0:11];
 logic [3:0] wptr;
 
 //write increment
@@ -50,5 +50,5 @@ always_ff @(posedge clk or negedge nrst) begin
 end
 
 //output
-assign out = output_reg[rptr];
+assign out_data = output_reg[rptr];
 endmodule
