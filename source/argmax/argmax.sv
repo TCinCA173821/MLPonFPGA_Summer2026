@@ -10,22 +10,12 @@ module argmax (
 logic [11:0] out_reg;
 logic load_en;
 
-//comparator logic
-always_comb begin
-	if(start && (in > out_reg)) begin
-		comp_out = 2'b01;
-		load_en = '1;
-	end else begin
-		load_en = '0;
-	end
-end
-
 //register
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		out_reg <= 0;
 		out <= 0;
-	end else if(load_en) begin
+	end else if(start && (in > out_reg)) begin
 		out_reg <= in;
 		out <= in_ptr;
 	end
