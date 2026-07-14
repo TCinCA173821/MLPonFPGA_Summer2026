@@ -8,15 +8,15 @@ module argmax (
 );
 
 logic [11:0] out_reg;
-logic [1:0] comp_out; 
 logic load_en;
 
 //comparator logic
 always_comb begin
-	if(in > out_reg) begin
+	if(start && (in > out_reg)) begin
 		comp_out = 2'b01;
+		load_en = '1;
 	end else begin
-		comp_out = 2'b10;
+		load_en = '0;
 	end
 end
 
@@ -25,7 +25,7 @@ always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		out_reg <= 0;
 		out <= 0;
-	end else if(start) begin
+	end else if(load_en) begin
 		out_reg <= in;
 		out <= in_ptr;
 	end
