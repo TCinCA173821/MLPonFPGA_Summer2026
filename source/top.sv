@@ -27,10 +27,13 @@ module top (
   logic signed [15:0] MAC_out [0:3];
   logic [3:0] MAC_outrelu [0:3];
 
-  logic signed [15:0] OBLrdata;
+  logic signed [15:0] OLBrdata;
   logic [3:0] OLBrptr;
 
   logic [3:0] result;
+  logic clk;
+
+  assign clk = hz100;
 
   assign start = pb[9];
   assign cs = pb[10];
@@ -48,13 +51,13 @@ module top (
   genvar i;
 
     generate
-        for (i = 0; i < WIDTH; i = i + 1) begin :
+        for (i = 0; i < 4; i = i + 1) begin : gen_mac
             MAC MAC_inst (.*,.n_rst(!reset),.MAC_in(MAC_in[i]),.MAC_out(MAC_out[i]),.MAC_outrelu(MAC_outrelu[i]));
         end
     endgenerate
   hidden_layer_buffer hlb1 (.*, .n_rst(!reset),.wen(HLBwen),.ren(HLBren),.incr(HLBincr),.in(MAC_outrelu),.out(HLBrdata));
-  output_layer_buffer olb1 (.*,.n_rst(!reset),.wen(OLBwen),.r_inc(OLBincr),.in(MAC_out),.outdata(OBLrdata),.rptr(OLBrptr));
-  argmax argmax1 (.*,.nrst(!reset),.start(ARG_s),.in(OBLrdata),.in_ptr(OLBrptr),.out(result));
+  output_layer_buffer olb1 (.*,.n_rst(!reset),.wen(OLBwen),.r_inc(OLBincr),.in(MAC_out),.out_data(OLBrdata),.rptr(OLBrptr));
+  argmax argmax1 (.*,.nrst(!reset),.start(ARG_s),.in(OLBrdata),.in_ptr(OLBrptr),.out(result));
   ssdec decoder1 (.digit(result),.ss0(ss0));
   
 endmodule
