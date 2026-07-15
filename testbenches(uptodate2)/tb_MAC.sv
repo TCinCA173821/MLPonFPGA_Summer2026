@@ -1,10 +1,4 @@
-// Testbench for MAC (integrates mixedsign4bitmult, addersigned16bit, accreg, relu)
-// MAC_l : load bias  -> reg <= sign_extend(MAC_in[7:0])
-// MAC_s : accumulate -> reg <= reg + (signed MAC_in[7:4] * unsigned MAC_in[3:0])
-// MAC_outrelu = relu(reg)
-`timescale 1ns/1ps
 module tb_MAC;
-
     logic clk = 0, n_rst;
     logic [7:0] MAC_in;
     logic MAC_s, MAC_l;
@@ -15,7 +9,7 @@ module tb_MAC;
     int checks = 0;
     logic signed [15:0] model_acc;
 
-    always #5 clk = ~clk;
+    always #(10) clk++;
 
     MAC DUT (
         .clk(clk), .n_rst(n_rst), .MAC_in(MAC_in),
@@ -33,12 +27,14 @@ module tb_MAC;
         n_rst = 0; MAC_s = 0; MAC_l = 0; MAC_in = 0; model_acc = 0;
         repeat (2) @(posedge clk);
         n_rst = 1;
-        @(posedge clk); #1;
+        @(posedge clk);
+        #(1);
     endtask
 
     task automatic load_bias(input logic signed [7:0] b);
         MAC_in = b; MAC_l = 1; MAC_s = 0;
-        @(posedge clk); #1;
+        @(posedge clk);
+        #(1);
         MAC_l = 0;
         model_acc = signed'(b);
     endtask
@@ -70,22 +66,19 @@ module tb_MAC;
         reset();
         check("after reset");
 
-        // Scenario A: negative bias, then MACs -> stays negative -> relu 0
         load_bias(-8'sd100); check("bias -100");
         accumulate( 4'sd4, 4'd9);  check("acc 4*9");
         accumulate(-4'sd5, 4'd14); check("acc -5*14");
         accumulate( 4'sd7, 4'd11); check("acc 7*11");
         accumulate( 4'sd2, 4'd2);  check("acc 2*2");
 
-        // Scenario B: reset then accumulate into positive saturation
         reset();
         load_bias(8'sd0); check("bias 0");
         for (int k = 0; k < 6; k++) begin
-            accumulate(4'sd7, 4'd15); // +105 each -> saturates relu at 15 quickly
+            accumulate(4'sd7, 4'd15);
             check($sformatf("posacc step %0d", k));
         end
-
-        // Scenario C: random
+        
         reset();
         load_bias($random); check("rand bias");
         for (int k = 0; k < 30; k++) begin
