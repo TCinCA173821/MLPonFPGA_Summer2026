@@ -4,11 +4,11 @@ module hidden_layer_buffer (
 	input logic wen,
 	input logic ren,
 	input logic incr,
-	input logic [3:0][3:0] in,
-	output logic [3:0][3:0] out
+	input logic [15:0] in,     // packed 4x4-bit layer (element k = in[4*k +: 4])
+	output logic [15:0] out
 );
 
-logic [3:0][3:0] mem_layers [0:3];
+logic [15:0] mem_layers [0:3];
 logic [1:0] ptr;
 
 //ptr increment
@@ -23,7 +23,7 @@ end
 //write
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		mem_layers <= '{default: '0};
+		for (int i = 0; i < 4; i++) mem_layers[i] <= '0;
 	end else if(wen) begin
 		mem_layers[ptr] <= in;
 	end
