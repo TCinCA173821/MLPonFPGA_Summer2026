@@ -4,7 +4,7 @@ module argmax (
 	input logic start,
 	input logic [15:0] in,
 	input logic [3:0] in_ptr,
-	output logic [3:0] out,
+	output logic [3:0] out
 );
 
 	logic [15:0] out_reg;
