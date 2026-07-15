@@ -2,13 +2,13 @@ module controllertop(
     input logic clk,
     input logic n_rst,
     input logic start,
-    input logic [3:0] HLBrdata [0:3],
+    input logic [15:0] HLBrdata,            // packed 4x4-bit (element k = HLBrdata[4*k +: 4])
     input logic SPI_dv,
     input logic [31:0] SPI_reg,
     output logic Done,
     output logic MAC_s,
     output logic MAC_l,
-    output logic signed [7:0] MAC_in [0:3],
+    output logic signed [31:0] MAC_in,      // packed 4x8-bit (element k = MAC_in[8*k +: 8])
     output logic HLBren,
     output logic HLBincr,
     output logic HLBwen,

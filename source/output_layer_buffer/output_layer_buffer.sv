@@ -3,7 +3,7 @@ module output_layer_buffer (
 	input logic nrst,
 	input logic wen,
 	input logic r_inc,
-	input logic [3:0][15:0] in,
+	input logic [63:0] in,     // packed 4x16-bit (element k = in[16*k +: 16])
 	output logic [15:0] out_data,
 	output logic [3:0] rptr
 );
@@ -27,12 +27,12 @@ end
 //input
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		output_reg <= '{default: '0};
+		for (int i = 0; i < 12; i++) output_reg[i] <= '0;
 	end else if (wen) begin
-		output_reg[wptr] <= in[3];
-		output_reg[wptr+4'd1] <= in[2];
-		output_reg[wptr+4'd2] <= in[1];
-		output_reg[wptr+4'd3] <= in[0];
+		output_reg[wptr] <= in[16*3 +: 16];
+		output_reg[wptr+4'd1] <= in[16*2 +: 16];
+		output_reg[wptr+4'd2] <= in[16*1 +: 16];
+		output_reg[wptr+4'd3] <= in[16*0 +: 16];
 	end
 end
 

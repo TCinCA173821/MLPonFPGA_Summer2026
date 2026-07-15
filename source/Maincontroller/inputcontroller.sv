@@ -5,9 +5,9 @@ module input_controller(
     input logic Itype,
     input logic SPI_dv,
     input logic [31:0] SPI_d,
-    input logic [3:0] HLBrdata [0:3],
+    input logic [15:0] HLBrdata,            // packed 4x4-bit (element k = HLBrdata[4*k +: 4])
     output logic Id,
-    output logic signed [7:0] MAC_in [0:3],
+    output logic signed [31:0] MAC_in,      // packed 4x8-bit (element k = MAC_in[8*k +: 8])
     output logic HLBren,
     output logic HLBincr,
     output logic SPI_rq
@@ -22,7 +22,7 @@ module input_controller(
     } state_t;
     
     state_t curstate, nxtstate;
-    logic signed [7:0] MAC_in_nxt [0:3];
+    logic signed [31:0] MAC_in_nxt;         // packed 4x8-bit
 
     always_ff @(posedge clk, negedge n_rst) begin
         if(!n_rst) curstate <= IDLE;
@@ -46,7 +46,6 @@ module input_controller(
     end
 
     always_comb begin
-        int j;
         MAC_in_nxt = MAC_in;
         HLBren = '0;
         HLBincr = '0;
@@ -57,8 +56,8 @@ module input_controller(
             RECEIVING: HLBren = Itype;
             BUFFER: begin 
                 HLBren = Itype;
-                for(j = 0; j < 4; j++) begin
-                    MAC_in_nxt[j] = $signed({SPI_d[31-8*j:28-8*j], Itype ? HLBrdata[3-j] :SPI_d[27-8*j:24-8*j]});
+                for(int j = 0; j < 4; j++) begin
+                    MAC_in_nxt[8*j +: 8] = {SPI_d[31-8*j -: 4], Itype ? HLBrdata[4*(3-j) +: 4] : SPI_d[27-8*j -: 4]};
                 end
             end
             PULSEDONE: begin 
