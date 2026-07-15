@@ -6,16 +6,17 @@ module SPI_shiftreg (
     output logic [31:0] SPI_reg
 );
 
-    logic [31:0] reg, regnxt;
+    logic [31:0] intreg, regnxt;
 
     alawys_ff @ (posedge sclk, negedge n_rst) begin
-        if(!n_rst) reg <= '0;
-        else reg <= regnxt;
+        if(!n_rst) intreg <= '0;
+        else intreg <= regnxt;
     end
 
     always_comb begin
-        regnxt = cs ? {mosi, reg[31:8]} : reg;
+        regnxt = cs ? {mosi, intreg[31:8]} : intreg;
     end
+    assign SPI_reg = intreg
 endmodule
 
 module SPI_FSM(
