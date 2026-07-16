@@ -2,12 +2,12 @@ module argmax (
 	input logic clk,
 	input logic nrst,
 	input logic start,
-	input logic [15:0] in,
+	input logic signed [15:0] in,
 	input logic [3:0] in_ptr,
 	output logic [3:0] out
 );
 
-logic [15:0] out_reg;
+logic signed [15:0] out_reg;
 logic load_en;
 
 //register
