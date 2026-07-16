@@ -37,18 +37,18 @@ module main_ctrlfsm(
     end
 
     always_comb begin
-        Len = '0;
-        Lsel = '0;
-        Aen = '0;
-        Done = '0;
+        Len = 1'b0;
+        Lsel = 1'b0;
+        Aen = 1'b0;
+        Done = 1'b0;
         case(curstate)
-            HIDDENLAYER: Len = '1;
+            HIDDENLAYER: Len = 1'b1;
             OUTPUTLAYER: begin
-                Len = '1;
-                Lsel = '1;
+                Len = 1'b1;
+                Lsel = 1'b1;
             end
-            ARGMAX: Aen = '1;
-            PULSEDONE: Done = '1;
+            ARGMAX: Aen = 1'b1;
+            PULSEDONE: Done = 1'b1;
         endcase
     end
 endmodule
