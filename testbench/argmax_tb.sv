@@ -52,7 +52,7 @@ endtask
 
 initial begin
 	$dumpfile("waveform.fst");
-	$dumpvars(0, tb_circ_shiftreg);
+	$dumpvars(0, argmax_tb);
 
 	nrst = 1'b1;
 	
