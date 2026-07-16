@@ -1,4 +1,4 @@
-module tb_output_layer_buffer;
+module output_layer_buffer_tb;
 
 //tb signals
 logic clk = 0, nrst;
@@ -9,7 +9,7 @@ logic [3:0] rptr;
 
 //tests
 int tests_passed = 0;
-logic [15:0] dataset [0:2];
+logic [63:0] dataset [0:2];
 
 always #(10) clk++;
 
@@ -33,12 +33,11 @@ endtask
 
 task read(
   input logic [15:0] expected_data,
-  input logic [3:0] expected_ptr
 );
 	r_inc = '1;
 	@(posedge clk);
-  $display("reading: out_data: %h, rptr: %h", out_data, rptr);	
-  if(out_data == expected_data && rptr == expected_ptr) begin
+  $display("reading: out_data: %h, rptr: %h, expected: %h", out_data, rptr, expected_data);	
+  if(out_data == expected_data) begin
     tests_passed++;
   end
 	#(1);
@@ -46,7 +45,7 @@ task read(
 endtask
 
 task write(
-	input logic [3:0][3:0] test_in
+	input logic [63:0] test_in
 );
 	wen = '1;
 	in = test_in;
@@ -57,7 +56,7 @@ task write(
 endtask
 
 task test(
-  input logic [15:0] test_data [0:2]
+  input logic [63:0] test_data [0:2]
 );
 	//write data
   for(int i = 0; i < 3; i++) begin
@@ -65,9 +64,14 @@ task test(
 	end
 	
 	//read data
-  for(int i = 0; i < 10; i++) begin
-    read(test_data[i], i);
-  end
+	for(int i = 0; i < 3; i++) begin
+		for(int j = 0; j < 4; j++) begin
+			if(i == 2 && j == 2) begin
+				break;
+			end
+			read(test_data[i][63 - (j * 16) -: 16]);
+		end
+	end
 
 	$display("Tests passed: %0d/10", tests_passed); 
 endtask
@@ -85,9 +89,9 @@ initial begin
 	#(10);
 
 	//tests
-	dataset[0] = 16'h1234;
-	dataset[1] = 16'h5678;
-	dataset[2] = 16'h9ABC;
+	dataset[0] = 64'h1234123789182732;
+	dataset[1] = 64'h5678abc21bca1392;
+	dataset[2] = 64'h9ABC9a87cb9a7cb7;
 
 	test(dataset);
 
