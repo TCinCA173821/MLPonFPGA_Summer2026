@@ -9,7 +9,7 @@ module SPI_shiftreg (
     logic [31:0] intreg, regnxt;
 
     always_ff @ (posedge sclk, negedge n_rst) begin
-        if(!n_rst) intreg <= '0;
+        if(!n_rst) intreg <= 32'b0;
         else intreg <= regnxt;
     end
 
@@ -51,11 +51,11 @@ module SPI_FSM(
     end
 
     always_comb begin
-        nxtpckt_to_pi = '0;
-        SPI_dv = '0;
+        nxtpckt_to_pi = 1'b0;
+        SPI_dv = 1'b0;
         case(curstate)
-            RQ: nxtpckt_to_pi = '1;
-            PULSEDV: SPI_dv = '1;
+            RQ: nxtpckt_to_pi = 1'b1;
+            PULSEDV: SPI_dv = 1'b1;
         endcase
     end
 endmodule
@@ -69,8 +69,8 @@ module dualffsync (
     logic syn1, syn2;
     always_ff @ (posedge clk, negedge n_rst) begin
         if(!n_rst) begin
-            syn1 <= '0;
-            syn2 <= '0;
+            syn1 <= 1'b0;
+            syn2 <= 1'b0;
         end else begin
             syn1 <= async_in;
             syn2 <= syn1;
