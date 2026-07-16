@@ -32,7 +32,7 @@ end
 //output
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		out <= 1'b0;
+		out <= 16'b0;
 	end else if (ren) begin
 		out <= mem_layers[ptr];
 	end
