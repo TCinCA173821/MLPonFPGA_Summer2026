@@ -1,5 +1,5 @@
 
-module tb_Maincontroller;
+module tb_SPImodule;
 
     // TB Signals (connect to DUT)
     logic clk = 0, n_rst;

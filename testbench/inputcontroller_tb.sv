@@ -1,11 +1,11 @@
 
-module tb_Maincontroller;
+module tb_inputcontroller;
 
     // TB Signals (connect to DUT)
     logic clk = 0, n_rst;
     logic [15:0] HLBrdata
     logic [31:0] SPI_reg, MAC_in;
-    logic start, SPI_dv, Done, MAC_s, MAC_l, HLBren, HLBincr, HLBwen, OLBincr,
+    logic Irq, Itype, Id, SPIrq, SPIdv, HLBren, HLBincr, HLBwen, OLBincr,
             OLBwen, nxtpckt, ARG_s;
 
     logic [31:0] fake_SPI_reg;
