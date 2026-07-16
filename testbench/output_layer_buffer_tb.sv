@@ -78,7 +78,7 @@ endtask
 
 initial begin
 	$dumpfile("waveform.fst");
-	$dumpvars(0, tb_circ_shiftreg);
+	$dumpvars(0, output_layer_buffer_tb);
 
 	nrst = 1'b1;
 	
