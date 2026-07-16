@@ -23,7 +23,7 @@ always_comb begin
 	case(state)
 		IDLE: next_state = Aen ? RUN : IDLE;
 		RUN: next_state = INCR;
-		INCR: next_state = (node == 'd9) ? DONE : RUN;
+		INCR: next_state = (node == 4'd9) ? DONE : RUN;
 		DONE: next_state = IDLE;
 		default: next_state = IDLE;
 	endcase
@@ -33,7 +33,7 @@ end
 always_ff @(posedge clk, negedge n_rst) begin
 	if(!n_rst) begin
 		state <= IDLE;
-		node <= '0;
+		node <= 4'd0;
 	end else begin
 		state <= next_state;
 		node <= next_node;
@@ -42,19 +42,19 @@ end
 
 //signal updates
 always_comb begin
-	Ad = '0;
-	OLBincr = '0;
-	ARG_s = '0;
+	Ad = 1'b0;
+	OLBincr = 1'b0;
+	ARG_s = 1'b0;
 	next_node = node;
 
 	case(state)
-		IDLE: next_node = '0;
-        RUN: ARG_s = '1;
+		IDLE: next_node = 1'b0;
+        RUN: ARG_s = 1'b1;
 		INCR: begin
-			OLBincr = '1;
-			next_node = node + 1;
+			OLBincr = 1'b1;
+			next_node = node + 4'd1;
 		end
-		DONE: Ad = '1;
+		DONE: Ad = 1'b1;
 	endcase
 end
 endmodule
