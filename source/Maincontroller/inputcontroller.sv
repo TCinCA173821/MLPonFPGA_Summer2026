@@ -7,7 +7,7 @@ module input_controller(
     input logic [31:0] SPI_d,
     input logic [15:0] HLBrdata,            // packed 4x4-bit (element k = HLBrdata[4*k +: 4])
     output logic Id,
-    output logic signed [31:0] MAC_in,      // packed 4x8-bit (element k = MAC_in[8*k +: 8])
+    output logic [31:0] MAC_in,      // packed 4x8-bit (element k = MAC_in[8*k +: 8])
     output logic HLBren,
     output logic HLBincr,
     output logic SPI_rq
@@ -22,7 +22,7 @@ module input_controller(
     } state_t;
     
     state_t curstate, nxtstate;
-    logic signed [31:0] MAC_in_nxt;         // packed 4x8-bit
+    logic [31:0] MAC_in_nxt;         // packed 4x8-bit
 
     always_ff @(posedge clk, negedge n_rst) begin
         if(!n_rst) curstate <= IDLE;
@@ -30,7 +30,7 @@ module input_controller(
     end
 
     always_ff @(posedge clk, negedge n_rst) begin
-        if(!n_rst) MAC_in <= '0;
+        if(!n_rst) MAC_in <= 'b0;
         else MAC_in <= MAC_in_nxt;
     end
 
@@ -47,12 +47,12 @@ module input_controller(
 
     always_comb begin
         MAC_in_nxt = MAC_in;
-        HLBren = '0;
-        HLBincr = '0;
-        Id = '0;
-        SPI_rq = '0;
+        HLBren = 'b0;
+        HLBincr = 'b0;
+        Id = 'b0;
+        SPI_rq = 'b0;
         case(curstate)
-            RQ: SPI_rq = '1;
+            RQ: SPI_rq = 'b1;
             RECEIVING: HLBren = Itype;
             BUFFER: begin 
                 HLBren = Itype;
