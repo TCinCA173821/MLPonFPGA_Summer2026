@@ -1,10 +1,10 @@
 
-module SPI_shiftreg_tb;
+module SPI_mod_tb;
 
     // TB Signals (connect to DUT)
-    logic clk = 0, n_rst;
+    logic clk = 0, n_rst, sclk = 0;
     logic [7:0] mosi;
-    logic cs;
+    logic cs, nxtpckt, nxtpckt_to_pi, SPI_dv;
     logic [31:0] SPI_reg;
 
     logic [31:0] expectedpckt;
@@ -16,11 +16,9 @@ module SPI_shiftreg_tb;
 
     // Clock generation
     always #(10) clk++;
-
-
-
-    SPI_shiftreg DUT(
-        .*,.sclk(clk)
+    always #(40) sclk++;
+    SPI_mod DUT(
+        .*
     );
     
 
@@ -44,6 +42,10 @@ module SPI_shiftreg_tb;
         //target signals
         mosi = 0;
         cs = 0;
+        nxtpckt = 0;
+        nxtpckt_to_pi = 0;
+        SPI_dv = 0;
+        SPI_reg = 0;
     end
     endtask
 
@@ -54,7 +56,7 @@ module SPI_shiftreg_tb;
         cs = 1'b1;
         for(int i = 0; i < 4; i++) begin
             mosi = pkt[31-8*i -:8];
-            @(posedge clk);
+            @(posedge sclk);
             #(1);
         end
         #(1);
@@ -71,14 +73,28 @@ module SPI_shiftreg_tb;
     end
     endtask
 
+
+
     task run1(
         logic [31:0]pkt
     );
     begin
 
+        nxtpckt = 1;
+        @(posedge nxtpckt_to_pi);
         writepckt(pkt);
-        #(10);
-        check_valid(pkt);
+        fork
+            begin
+                @(posedge SPI_dv)
+                check_valid(pkt);
+            end
+            begin
+                // Thread 2: The Timeout Timer
+                #(1000); // Replace with your desired timeout value
+                $display("Time out tb failed", $time);
+            end
+        join_any
+        disable fork;
     end
     endtask
 
