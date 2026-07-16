@@ -18,16 +18,16 @@ module top (
 
   logic start, SPI_dv, Done, MAC_s, MAC_l, HLBren, HLBincr, HLBwen, OLBincr, OLBwen, nxtpckt, ARG_s;
   logic [31:0] SPI_reg;
-  logic [3:0] HLBrdata [0:3];
-  logic signed [7:0] MAC_in [0:3];
+  logic [15:0] HLBrdata;
+  logic [31:0] MAC_in;
 
   logic cs, sclk, nxtpckt_to_pi;
   logic [7:0] mosi;
 
-  logic signed [15:0] MAC_out [0:3];
-  logic [3:0] MAC_outrelu [0:3];
+  logic [63:0] MAC_out;
+  logic [15:0] MAC_outrelu;
 
-  logic signed [15:0] OLBrdata;
+  logic [15:0] OLBrdata;
   logic [3:0] OLBrptr;
 
   logic [3:0] result;
@@ -43,16 +43,15 @@ module top (
 
   assign left[0] = Done;
   assign left[1] = nxtpckt_to_pi;
-  assign left[4:1] = result;
+  assign left[5:2] = result;
   
 
   controllertop main1(.*,.n_rst(!reset));
   SPI_mod spisys1(.*,.n_rst(!reset));
   genvar i;
-
     generate
         for (i = 0; i < 4; i = i + 1) begin : gen_mac
-            MAC MAC_inst (.*,.n_rst(!reset),.MAC_in(MAC_in[i]),.MAC_out(MAC_out[i]),.MAC_outrelu(MAC_outrelu[i]));
+          MAC MAC_inst (.*,.n_rst(!reset),.MAC_in(MAC_in[8*i +:8]),.MAC_out(MAC_out[8*i +:8]),.MAC_outrelu(MAC_outrelu[4*i +:4]));
         end
     endgenerate
   hidden_layer_buffer hlb1 (.*, .n_rst(!reset),.wen(HLBwen),.ren(HLBren),.incr(HLBincr),.in(MAC_outrelu),.out(HLBrdata));
