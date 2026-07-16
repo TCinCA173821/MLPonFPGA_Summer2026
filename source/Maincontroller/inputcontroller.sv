@@ -5,9 +5,9 @@ module input_controller(
     input logic Itype,
     input logic SPI_dv,
     input logic [31:0] SPI_d,
-    input logic [15:0] HLBrdata,            // packed 4x4-bit (element k = HLBrdata[4*k +: 4])
+    input logic [15:0] HLBrdata,            //[1,2,3,4]
     output logic Id,
-    output logic [31:0] MAC_in,      // packed 4x8-bit (element k = MAC_in[8*k +: 8])
+    output logic [31:0] MAC_in,      // [1,2,3,4]
     output logic HLBren,
     output logic HLBincr,
     output logic SPI_rq
@@ -30,7 +30,7 @@ module input_controller(
     end
 
     always_ff @(posedge clk, negedge n_rst) begin
-        if(!n_rst) MAC_in <= 'b0;
+        if(!n_rst) MAC_in <= 32'b0;
         else MAC_in <= MAC_in_nxt;
     end
 
@@ -47,12 +47,12 @@ module input_controller(
 
     always_comb begin
         MAC_in_nxt = MAC_in;
-        HLBren = 'b0;
-        HLBincr = 'b0;
-        Id = 'b0;
-        SPI_rq = 'b0;
+        HLBren = 1'b0;
+        HLBincr = 1'b0;
+        Id = 1'b0;
+        SPI_rq = 1'b0;
         case(curstate)
-            RQ: SPI_rq = 'b1;
+            RQ: SPI_rq = 1'b1;
             RECEIVING: HLBren = Itype;
             BUFFER: begin 
                 HLBren = Itype;
@@ -61,7 +61,7 @@ module input_controller(
                 end
             end
             PULSEDONE: begin 
-                Id = '1;   
+                Id = 1'b1;   
                 HLBincr = Itype;
             end
         endcase
