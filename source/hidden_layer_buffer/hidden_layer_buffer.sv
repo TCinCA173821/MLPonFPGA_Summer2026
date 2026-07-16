@@ -8,7 +8,7 @@ module hidden_layer_buffer (
 	output logic [15:0] out
 );
 
-logic [15:0] mem_layers [0:3];
+logic [15:0] mem_layers [3:0];
 logic [1:0] ptr;
 
 //ptr increment
@@ -25,7 +25,7 @@ always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		for (int i = 0; i < 4; i++) mem_layers[i] <= 16'd0;
 	end else if(wen) begin
-		mem_layers[ptr] <= in;
+		mem_layers <= {in, mem_layers[3], mem_layers[2], mem_layers[1]};
 	end
 end
 
