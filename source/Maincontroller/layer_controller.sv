@@ -35,7 +35,7 @@ module layer_controller (
 	always_ff @(posedge clk, negedge n_rst) begin
 	if(!n_rst) begin
 		state <= IDLE;
-		layer_cnt <= 0;
+		layer_cnt <= 1'b0;
 	end else begin
 		state <= next_state;
 		layer_cnt <= next_cnt;
@@ -43,23 +43,23 @@ module layer_controller (
 	end
 
 	always_comb begin
-	Men = '0;
-	Ld = '0;
+	Men = 1'b0;
+	Ld = 1'b0;
 	next_cnt = layer_cnt;
-	total_layers = (Lsel) ? 'd2 : 'd3;
-	Miter = (Lsel) ? 'd15 : 'd195;
-	OLBwen = '0;
-	HLBwen = '0;
+	total_layers = (Lsel) ? 2'd2 : 2'd3;
+	Miter = (Lsel) ? 8'd15 : 8'd195;
+	OLBwen = 1'b0;
+	HLBwen = 1'b0;
 		
 		case(state)
-			IDLE: next_cnt = '0;
-			MAC: Men = '1;
+			IDLE: next_cnt = 1'b0;
+			MAC: Men = 1'b1;
 			STORE: begin
-				next_cnt = layer_cnt + 'd1;
-				if(Lsel) OLBwen = '1;
-				else HLBwen = '1;
+				next_cnt = layer_cnt + 2'd1;
+				if(Lsel) OLBwen = 1'b1;
+				else HLBwen = 1'b1;
 			end
-			DONE: Ld = '1;
+			DONE: Ld = 1'b1;
 		endcase
 	end
 endmodule
