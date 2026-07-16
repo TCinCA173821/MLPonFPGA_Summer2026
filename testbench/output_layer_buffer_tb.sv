@@ -19,8 +19,8 @@ output_layer_buffer DUT(
 	.wen(wen),
 	.r_inc(r_inc),
 	.in(in),
-  .out_data(out_data),
-  .rptr(rptr)
+	.out_data(out_data),
+	.rptr(rptr)
 );
 
 task reset();
@@ -94,5 +94,3 @@ initial begin
 	$finish;
 end
 endmodule
-
-
