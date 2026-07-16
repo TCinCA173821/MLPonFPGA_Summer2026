@@ -16,7 +16,8 @@ hidden_layer_buffer DUT(
 	.clk(clk),
 	.nrst(nrst),
 	.wen(wen),
-	.r_inc(r_inc),
+	.ren(ren),
+	.incr(incr),
 	.in(in),
 	.out(out)
 );
@@ -29,10 +30,16 @@ task reset();
 	#(1);
 endtask
 
-task read();
+task read(
+	input logic [15:0] expected
+);
 	ren = 1'b1;
 	@(posedge clk);
 	#(1);
+	$display("reading %h", out);	
+    if(out == expected) begin
+		tests_passed++;
+	end
 	ren = 1'b0;
 	incr = 1'b1;
 	@(posedge clk);
@@ -65,11 +72,7 @@ task test(
 	
 	//read data
 	for(int i = 0; i < 4; i++) begin
-    	if(out == data[i]) begin
-			$display("read output: %h\n", out);
-			tests_passed++;
-		end
-		read();
+		read(data[i]);
 	end
 
 	$display("Tests passed: %0d/4", tests_passed); 
@@ -96,4 +99,3 @@ initial begin
 	$finish;
 end
 endmodule
-
