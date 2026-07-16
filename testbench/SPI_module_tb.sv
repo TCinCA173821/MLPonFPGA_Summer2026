@@ -1,10 +1,13 @@
 
-module SPI_fsm_tb;
+module SPI_shiftreg_tb;
 
     // TB Signals (connect to DUT)
     logic clk = 0, n_rst;
-    logic sync_cs, nxtpckt, nxtpckt_to_pi, SPI_dv;
+    logic [7:0] mosi;
+    logic cs;
+    logic [31:0] SPI_reg;
 
+    logic [31:0] expectedpckt;
     // TODO: (optional) declare any other debugging-related
     // metadata signals you want here.
     // Adding things like a test number, or a string containing
@@ -15,7 +18,8 @@ module SPI_fsm_tb;
     always #(10) clk++;
 
 
-    SPI_FSM DUT(
+
+    SPI_shiftreg DUT(
         .*,.sclk(clk)
     );
     
@@ -38,37 +42,45 @@ module SPI_fsm_tb;
     task reset_signals();
     begin
         //target signals
-        sync_cs = 0;
-        nxtpckt = 0;
-        nxtpckt_to_pi = 0;
-        SPI_dv = 0;
+        mosi = 0;
+        cs = 0;
+    end
+    endtask
+
+    task writepckt(
+        logic [31:0]pkt
+    );
+    begin
+        cs = 1'b1;
+        for(int i = 0; i < 4; i++) begin
+            mosi = pkt[31-8*i -:8];
+            @(posedge clk);
+            #(1);
+        end
+        #(1);
+        cs = 1'b0;
+    end
+    endtask
+
+    task check_valid(
+        logic [31:0] pkt
+    );
+    begin
+        if(pkt == SPI_reg)
+            $display("passed");
     end
     endtask
 
     task run1(
+        logic [31:0]pkt
     );
     begin
-        nxtpckt = 1;
-        @(posedge(nxtpckt_to_pi);
-        #(30);
-        sync_cs = 1;
-        #(200);
-        sync_cs = 0;
-        fork
-            begin
-                @(posedge SPI_dv)
-                $display("DV");
-            end
-            begin
-                // Thread 2: The Timeout Timer
-                #(1000); // Replace with your desired timeout value
-                $display("Time out tb failed", $time);
-            end
-        join_any
-        disable fork; // Stops the other thread that didn't finish
+
+        writepckt(pkt);
+        #(10);
+        check_valid(pkt);
     end
     endtask
-
 
     initial begin
         
@@ -83,7 +95,10 @@ module SPI_fsm_tb;
         reset();
 
         // execute the testbench
-        run1();
+        run1({32'h00000000});
+        run1({32'h11111111});
+        run1({32'hFFFFFFFF});
+        run1({32'hAAAAAAAA});
         
 
         $finish;

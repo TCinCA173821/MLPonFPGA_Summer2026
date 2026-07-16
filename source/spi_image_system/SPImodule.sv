@@ -56,6 +56,10 @@ module SPI_FSM(
         case(curstate)
             RQ: nxtpckt_to_pi = 1'b1;
             PULSEDV: SPI_dv = 1'b1;
+            default: begin
+                nxtpckt_to_pi = 1'b0;
+                SPI_dv = 1'b0;
+            end
         endcase
     end
 endmodule
