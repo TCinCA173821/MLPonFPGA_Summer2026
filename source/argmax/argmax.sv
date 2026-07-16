@@ -7,14 +7,14 @@ module argmax (
 	output logic [3:0] out
 );
 
-	logic [15:0] out_reg;
+logic [15:0] out_reg;
 logic load_en;
 
 //register
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		out_reg <= 0;
-		out <= 0;
+		out_reg <= 16'b0;
+		out <= 4'b0;
 	end else if(start && (in > out_reg)) begin
 		out_reg <= in;
 		out <= in_ptr;
