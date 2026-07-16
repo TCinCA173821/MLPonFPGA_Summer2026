@@ -27,7 +27,7 @@ end
 //input
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		for (int i = 0; i < 12; i++) output_reg[i] <= '0;
+		for (int i = 0; i < 12; i++) output_reg[i] <= 16'b0;
 	end else if (wen) begin
 		output_reg[wptr] <= in[16*3 +: 16];
 		output_reg[wptr+4'd1] <= in[16*2 +: 16];
