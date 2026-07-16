@@ -2,13 +2,13 @@ module controllertop(
     input logic clk,
     input logic n_rst,
     input logic start,
-    input logic [15:0] HLBrdata,            // packed 4x4-bit (element k = HLBrdata[4*k +: 4])
+    input logic [15:0] HLBrdata,      // [1,2,3,4] order
     input logic SPI_dv,
     input logic [31:0] SPI_reg,
     output logic Done,
     output logic MAC_s,
     output logic MAC_l,
-    output logic [31:0] MAC_in,      // packed 4x8-bit (element k = MAC_in[8*k +: 8])
+    output logic [31:0] MAC_in,      //[1,2,3,4] order
     output logic HLBren,
     output logic HLBincr,
     output logic HLBwen,
@@ -20,8 +20,8 @@ module controllertop(
     logic ff1, ff2;
     always_ff @(posedge clk, negedge n_rst) begin // 2ff sync for start
         if(!n_rst) begin
-            ff1 <= '0;
-            ff2 <= '0;
+            ff1 <= 1'b0;
+            ff2 <= 1'b0;
         end else begin
             ff1 <= start;
             ff2 <= ff1;
