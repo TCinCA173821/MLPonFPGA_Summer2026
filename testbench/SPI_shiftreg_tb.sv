@@ -1,9 +1,9 @@
 
-module tb_SPI_shiftreg;
+module SPI_shiftreg_tb;
 
     // TB Signals (connect to DUT)
     logic clk = 0, n_rst;
-    logic [8:0] mosi;
+    logic [7:0] mosi;
     logic cs;
     logic [31:0] SPI_reg;
 
