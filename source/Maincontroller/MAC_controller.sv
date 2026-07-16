@@ -26,7 +26,7 @@ module MAC_controller(
     always_ff @ (posedge clk, negedge n_rst) begin
         if(!n_rst) begin
             curstate <= IDLE;
-            count <= 'd0;
+            count <= 8'd0;
         end else begin
             curstate <= nxtstate;
             count <= nxtcount;
@@ -39,28 +39,28 @@ module MAC_controller(
             PULLBIAS: nxtstate = Id ? LOADBIAS : PULLBIAS;
             LOADBIAS: nxtstate = PULLINPUT;
             PULLINPUT: nxtstate = Id ? COMPUTE : PULLINPUT;
-            COMPUTE: nxtstate = (count == (Miter - 'd1)) ? PULSEDONE : PULLINPUT;
+            COMPUTE: nxtstate = (count == (Miter - 8'd1)) ? PULSEDONE : PULLINPUT;
             PULSEDONE: nxtstate = IDLE;
             default: nxtstate = IDLE;
         endcase
-        nxtcount = (curstate == COMPUTE) ? count + 'd1 : count;
+        nxtcount = (curstate == COMPUTE) ? count + 8'd1 : count;
     end
 
     always_comb begin
-        Md = '0;
-        MAC_s = '0;
-        MAC_l = '0;
-        Irq = '0;
-        Itype = '0;
+        Md = 1'b0;
+        MAC_s = 1'b0;
+        MAC_l = 1'b0;
+        Irq = 1'b0;
+        Itype = 1'b0;
         case(curstate) 
-            PULLBIAS: Irq = '1;
-            LOADBIAS: MAC_l = '1;
+            PULLBIAS: Irq = 1'b1;
+            LOADBIAS: MAC_l = 1'b1;
             PULLINPUT: begin 
                 Itype = Lsel;
-                Irq = '1;
+                Irq = 1'b1;
             end
-            COMPUTE: MAC_s = '1;
-            PULSEDONE: Md = '1;
+            COMPUTE: MAC_s = 1'b1;
+            PULSEDONE: Md = 1'b1;
         endcase
     end
 endmodule
