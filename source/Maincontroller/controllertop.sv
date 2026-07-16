@@ -8,7 +8,7 @@ module controllertop(
     output logic Done,
     output logic MAC_s,
     output logic MAC_l,
-    output logic signed [31:0] MAC_in,      // packed 4x8-bit (element k = MAC_in[8*k +: 8])
+    output logic [31:0] MAC_in,      // packed 4x8-bit (element k = MAC_in[8*k +: 8])
     output logic HLBren,
     output logic HLBincr,
     output logic HLBwen,
