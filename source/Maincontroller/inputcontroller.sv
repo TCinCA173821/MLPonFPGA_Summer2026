@@ -57,7 +57,7 @@ module input_controller(
             BUFFER: begin 
                 HLBren = Itype;
                 for(int j = 0; j < 4; j++) begin
-                    MAC_in_nxt[8*j +: 8] = {SPI_d[31-8*j -: 4], Itype ? HLBrdata[4*(3-j) +: 4] : SPI_d[27-8*j -: 4]};
+                    MAC_in_nxt[8*j +: 8] = {SPI_d[31-8*j -: 4], Itype ? HLBrdata[4*j +: 4] : SPI_d[27-8*j -: 4]};
                 end
             end
             PULSEDONE: begin 
