@@ -8,15 +8,15 @@ module argmax_controller_tb;
   int arg_s_cnt = 0;
   int OLBincr_cnt = 0;
   int Ad_cnt = 0;
+  int cycles = 0;
   
-  argmax_controller(.*);
+  argmax_controller DUT(.*);
   always #(10) clk++;
 
   //update signal counts
   always @(posedge clk) begin
     if(ARG_s) arg_s_cnt++;
     if(OLBincr) OLBincr_cnt++;
-    if(Ad) Ad_cnt++;
   end
   
   task reset();
@@ -33,16 +33,20 @@ module argmax_controller_tb;
     #(1);
     Aen = 1'b0;
 
-    int cycles = 0;
     while(Ad == '0 && cycles < 50) begin
       cycles++;
       @(posedge clk);
       #(1);
+	  if(Ad == '1) begin
+		Ad_cnt++;
+	  end
     end
 
     if(OLBincr_cnt == 10 && arg_s_cnt == 10 && Ad_cnt == 1) begin
-      $display("passed");
-    end
+      $display("passed, olbincr: %d, arg_s incr: %d, done: %d", OLBincr_cnt, arg_s_cnt, Ad_cnt);
+    end else begin
+	  $display("failed, olbincr: %d, arg_s incr: %d, done: %d", OLBincr_cnt, arg_s_cnt, Ad_cnt);
+	end
   endtask
   
   initial begin
