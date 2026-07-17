@@ -17,7 +17,7 @@ module addersigned16bit_tb;
   );
     in1 = a;
     in2 = b;
-    expected = a + b
+    expected = a + b;
     #(1);
 
     total_tests++;
@@ -37,7 +37,7 @@ module addersigned16bit_tb;
     test(-16'sd100, -16'sd50);
     test(16'sd23567, -16'sd23567);
     
-    $display("%d/%d tests passed", test_passed, total_tests);
+    $display("%d/%d tests passed", tests_passed, total_tests);
 
     $finish;
   end
