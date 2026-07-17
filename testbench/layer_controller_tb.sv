@@ -12,6 +12,11 @@ module layer_controller_tb;
   layer_controller DUT(.*);
   always #(10) clk++;
 
+	always @(posedge clk) begin
+	  if(HLBwen) hlb_cnt++;
+      if(OLBwen) olb_cnt++;
+	end
+
   int cycles = 0;
   int hlb_cnt = 0;
   int olb_cnt = 0;
@@ -26,7 +31,7 @@ module layer_controller_tb;
   endtask
 
   task test(
-    input logic test_sel;
+    input logic test_sel
   );
     Len = 1'b1;
     @(posedge clk);
@@ -39,20 +44,17 @@ module layer_controller_tb;
       cycles++;
       @(posedge clk);
       #(1);
-
-      if(hlb) hlb_cnt++;
-      if(olb) olb_cnt++;
-      if(Ld) finished = 1'b1;
+	  if(Ld) finished = 1'b1;
     end
 
     if(test_sel) begin //olb
-      if(finished && olb_cnt == 3 && Miter = 8'd195) begin
+      if(finished && olb_cnt == 2 && Miter == 8'd15) begin
         $display("passed, olb_cnt: %d, miter: %d", olb_cnt, Miter);
       end else begin
         $display("failed, olb_cnt: %d, miter: %d", olb_cnt, Miter);
       end
     end else begin //hlb
-      if(finished && olb_cnt == 4 && Miter = 8'd15) begin
+      if(finished && hlb_cnt == 3 && Miter == 8'd195) begin
         $display("passed, hlb_cnt: %d, miter: %d", hlb_cnt, Miter);
       end else begin
         $display("passed, hlb_cnt: %d, miter: %d", hlb_cnt, Miter);
