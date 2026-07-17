@@ -8,11 +8,6 @@ module SPI_shiftreg_tb;
     logic [31:0] SPI_reg;
 
     logic [31:0] expectedpckt;
-    // TODO: (optional) declare any other debugging-related
-    // metadata signals you want here.
-    // Adding things like a test number, or a string containing
-    // the name of the test can be helpful for discerning when tests
-    // start/stop when viewed in the waveforms.
 
     // Clock generation
     always #(10) clk++;
@@ -34,11 +29,6 @@ module SPI_shiftreg_tb;
     end
     endtask
 
-    /*
-    * reset_signals
-    *
-    * Set all signals to a "neutral" value. Can be helpful between tests.
-    */
     task reset_signals();
     begin
         //target signals
