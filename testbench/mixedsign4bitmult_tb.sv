@@ -8,11 +8,11 @@ module mixedsign4bitmult_tb;
   int total_tests = 0;
 
   mixedsign4bitmult DUT (
-    .*;
+    .*
   );
 
   initial begin
-    $dumpfile("waveform.fst");
+  	$dumpfile("waveform.fst");
     $dumpvars(0, mixedsign4bitmult_tb);
     
     for (int i = -8; i < 8; i++) begin
@@ -22,13 +22,13 @@ module mixedsign4bitmult_tb;
         #(1);
 
         total_tests++;
-        if(signextendedout == signed'(4'(i)) * signed'({1'b0, 4'(j)}) begin
+        if(signextendedout == signed'(4'(i)) * signed'({1'b0, 4'(j)})) begin
           tests_passed++;
         end
       end
     end
     $display("%d/%d tests passed", tests_passed, total_tests);
            
-    $finish
+    $finish;
   end
 endmodule
