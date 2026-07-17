@@ -44,6 +44,7 @@ module SPI_mod_tb;
     );
     begin
         cs = 1'b1;
+        #(40);
         for(int i = 0; i < 4; i++) begin
             mosi = pkt[31-8*i -:8];
             @(posedge sclk);
@@ -85,6 +86,7 @@ module SPI_mod_tb;
             end
         join_any
         disable fork;
+        reset_signals()
     end
     endtask
 
