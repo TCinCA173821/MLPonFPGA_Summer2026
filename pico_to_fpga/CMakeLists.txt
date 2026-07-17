@@ -7,12 +7,17 @@ project(pico_fpga_bus C CXX ASM)
 pico_sdk_init()
 
 add_executable(pico_fpga_bus
-    src/main.c
-    src/parallel_bus.c
+    source/main.c
+    source/weights.c
+    source/form_packet.c
+    source/send_packet.c
+    source/bus_clock.c
+    source/handshake.c
+    source/usb_image.c
 )
 
 target_include_directories(pico_fpga_bus PRIVATE
-    src
+    source
 )
 
 target_link_libraries(pico_fpga_bus
