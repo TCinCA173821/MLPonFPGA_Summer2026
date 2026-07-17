@@ -31,7 +31,7 @@ module accreg(
     end
 
     always_comb begin
-        if (len) reg_val_nxt = $signed(Lin);
+        if (len) reg_val_nxt = { {8{Lin[7]}}, Lin};
         else if(wen) reg_val_nxt = in;
         else reg_val_nxt = reg_val;
     end
@@ -65,5 +65,4 @@ module MAC(
     accreg buf_reg1 (.clk(clk),.n_rst(n_rst),.wen(MAC_s),.len(MAC_l),.in(reg_in),.Lin(MAC_in),.out(MAC_out));
     relu relu1 (.in(MAC_out),.out(MAC_outrelu));
 endmodule
-
 
