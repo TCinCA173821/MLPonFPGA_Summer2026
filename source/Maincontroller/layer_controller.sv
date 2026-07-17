@@ -46,7 +46,7 @@ module layer_controller (
 	Men = 1'b0;
 	Ld = 1'b0;
 	next_cnt = layer_cnt;
-	total_layers = (Lsel) ? 2'd2 : 2'd3;
+	total_layers = (Lsel) ? 2'd3 : 2'd4;
 	Miter = (Lsel) ? 8'd15 : 8'd195;
 	OLBwen = 1'b0;
 	HLBwen = 1'b0;
