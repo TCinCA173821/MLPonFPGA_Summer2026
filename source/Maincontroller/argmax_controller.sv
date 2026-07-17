@@ -48,7 +48,7 @@ always_comb begin
 	next_node = node;
 
 	case(state)
-		IDLE: next_node = 1'b0;
+		IDLE: next_node = 4'b0;
         RUN: ARG_s = 1'b1;
 		INCR: begin
 			OLBincr = 1'b1;
