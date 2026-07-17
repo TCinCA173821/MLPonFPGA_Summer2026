@@ -59,7 +59,7 @@ module MACModule_tb;
 
   initial begin
     $dumpfile("waveform.fst");
-    $dumpvars(0, hidden_layer_buffer_tb.sv);
+    $dumpvars(0, MACModule_tb.sv);
   	n_rst = 1'b1;
   	$timeformat(-9, 2, " ns", 20);
   	
