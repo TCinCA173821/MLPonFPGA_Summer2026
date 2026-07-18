@@ -2,30 +2,32 @@ cmake_minimum_required(VERSION 3.13)
 
 include(pico_sdk_import.cmake)
 
-project(pico_fpga_bus C CXX ASM)
+project(pico_to_fpga C CXX ASM)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
 
-add_executable(pico_fpga_bus
-    source/main.c
-    source/weights.c
-    source/form_packet.c
-    source/send_packet.c
-    source/bus_clock.c
-    source/handshake.c
-    source/usb_image.c
+add_executable(pico_to_fpga
+    src/main.c
+    src/weights.c
+    src/form_packet.c
+    src/send_packet.c
+    src/usb_image.c
+    src/handshake.c
+    src/bus_clock.c
 )
 
-target_include_directories(pico_fpga_bus PRIVATE
-    source
+target_include_directories(pico_to_fpga PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
-target_link_libraries(pico_fpga_bus
+target_link_libraries(pico_to_fpga
     pico_stdlib
-    hardware_gpio
 )
 
-pico_enable_stdio_usb(pico_fpga_bus 1)
-pico_enable_stdio_uart(pico_fpga_bus 0)
+pico_enable_stdio_usb(pico_to_fpga 1)
+pico_enable_stdio_uart(pico_to_fpga 0)
 
-pico_add_extra_outputs(pico_fpga_bus)
+pico_add_extra_outputs(pico_to_fpga)
