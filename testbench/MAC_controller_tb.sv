@@ -22,10 +22,10 @@ module MAC_controller_tb;
   int cycles = 0;
 
   always @(posedge clk) begin
-    if(Md) Md_count++;
-    if(MAC_s) MAC_s_count = 0;
-    if(MAC_l) MAC_l_count = 0;
-    if(Irq) Irq_count = 0;
+    if(MAC_s) MAC_s_count++;
+    if(MAC_l) MAC_l_count++;
+    if(Irq) Irq_count++;
+	if(Itype) Itype_count++;
 	end
 
   task reset();
@@ -36,15 +36,28 @@ module MAC_controller_tb;
   	#(1);
   endtask
 
+  task reset_signals();
+	Md_count = 0;
+	MAC_s_count = 0;
+	MAC_l_count = 0;
+	Irq_count = 0;
+	Itype_count = 0;
+	cycles = 0;
+	Men = '0;
+	Miter = '0;
+	Id = '0;
+	Lsel = '0;
+  endtask
+
   task test(
     input logic test_lsel
   );
     Men = 1'b1;
-    Lsel = test_lsel
+    Lsel = test_lsel;
     if(test_lsel) begin
-      Miter = 8'd195;
-    end else begin
       Miter = 8'd15;
+    end else begin
+      Miter = 8'd195;
     end
     
     @(posedge clk);
@@ -54,21 +67,21 @@ module MAC_controller_tb;
     //simulate data recieved
     Id = 1'b1;
     
-    while(!Ld && cycles < 300) begin
+    while(!Md && cycles < 400) begin
       cycles++;
       @(posedge clk);
       #(1);
-      if(Md) Md_count = 1'b1;
+    	if(Md) Md_count++;
     end
 
     if(test_lsel) begin
-      if(Md_count && MAC_s_count == 196 && MAC_l_count == 196 && Irq_count == 197 && Itype_count == 0) begin
+      if(Md_count == 1 && (MAC_s_count == 16) && (MAC_l_count == 1) && (Irq_count == 17) && (Itype_count == 16)) begin
         $display("passed, Md_count: %d, MAC_s count: %d, MAC_l count: %d, Irq count: %d, Itype count: %d", Md_count, MAC_s_count, MAC_l_count, Irq_count, Itype_count);
       end else begin
         $display("failed, Md_count: %d, MAC_s count: %d, MAC_l count: %d, Irq count: %d, Itype count: %d", Md_count, MAC_s_count, MAC_l_count, Irq_count, Itype_count);
       end
     end else begin
-      if(Md_count && MAC_s_count == 196 && MAC_l_count == 196 && Irq_count == 197 && Itype_count == 0) begin
+      if(Md_count == 1 && (MAC_s_count == 196) && (MAC_l_count == 1) && (Irq_count == 197) && (Itype_count == 0)) begin
         $display("passed, Md_count: %d, MAC_s count: %d, MAC_l count: %d, Irq count: %d, Itype count: %d", Md_count, MAC_s_count, MAC_l_count, Irq_count, Itype_count);
       end else begin
         $display("failed, Md_count: %d, MAC_s count: %d, MAC_l count: %d, Irq count: %d, Itype count: %d", Md_count, MAC_s_count, MAC_l_count, Irq_count, Itype_count);
@@ -89,6 +102,8 @@ module MAC_controller_tb;
     //test hidden layer
     test(0);
     reset();
+	reset_signals();
+	#(1);
     //test output layer
     test(1);
     
