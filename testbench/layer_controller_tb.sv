@@ -1,65 +1,81 @@
-module layer_controller (
-	input logic clk,
-	input logic n_rst,
-	input logic Len,
-	input logic Lsel,
-	input logic Md,
-	output logic Men,
-	output logic Ld,
-	output logic HLBwen,
-	output logic OLBwen,
-	output logic [7:0] Miter
-);
+module layer_controller_tb;
+  logic clk = 0, n_rst;
+  logic Len;
+	logic Lsel;
+	logic Md;
+	logic Men;
+	logic Ld;
+	logic HLBwen;
+	logic OLBwen;
+  logic [7:0] Miter;
 
-	logic [1:0] layer_cnt, next_cnt, total_layers;
+  layer_controller DUT(.*);
+  always #(10) clk++;
 
-	//states
-	typedef enum logic [1:0] {
-	IDLE,
-	MAC,
-	STORE,
-	DONE
-	} state_t;
-	state_t state, next_state;
-
-	always_comb begin
-		case(state)
-			IDLE: next_state = (Len) ? MAC : IDLE;
-			MAC: next_state = (Md) ? STORE : MAC;
-			STORE: next_state = (next_cnt == total_layers) ? DONE : MAC;
-			DONE: next_state = IDLE;
-			default: next_state = IDLE;
-		endcase
+	always @(posedge clk) begin
+	  if(HLBwen) hlb_cnt++;
+      if(OLBwen) olb_cnt++;
 	end
 
-	always_ff @(posedge clk, negedge n_rst) begin
-	if(!n_rst) begin
-		state <= IDLE;
-		layer_cnt <= 1'b0;
-	end else begin
-		state <= next_state;
-		layer_cnt <= next_cnt;
-	end
-	end
+  int cycles = 0;
+  int hlb_cnt = 0;
+  int olb_cnt = 0;
+  logic finished = 0;
+  
+  task reset();
+  	n_rst = 1'b0;
+  	repeat(2) @(posedge clk);
+  	n_rst = 1'b1;
+  	@(posedge clk);
+  	#(1);
+  endtask
 
-	always_comb begin
-	Men = 1'b0;
-	Ld = 1'b0;
-	next_cnt = layer_cnt;
-	total_layers = (Lsel) ? 2'd2 : 2'd3;
-	Miter = (Lsel) ? 8'd15 : 8'd195;
-	OLBwen = 1'b0;
-	HLBwen = 1'b0;
-		
-		case(state)
-			IDLE: next_cnt = 1'b0;
-			MAC: Men = 1'b1;
-			STORE: begin
-				next_cnt = layer_cnt + 2'd1;
-				if(Lsel) OLBwen = 1'b1;
-				else HLBwen = 1'b1;
-			end
-			DONE: Ld = 1'b1;
-		endcase
-	end
+  task test(
+    input logic test_sel
+  );
+    Len = 1'b1;
+    @(posedge clk);
+    #(1);
+    Len = 1'b0;
+    Lsel = test_sel;
+
+    Md = 1'b1;
+    while(!Ld && cycles < 50) begin
+      cycles++;
+      @(posedge clk);
+      #(1);
+	  if(Ld) finished = 1'b1;
+    end
+
+    if(test_sel) begin //olb
+      if(finished && olb_cnt == 3 && Miter == 8'd15) begin
+        $display("passed, olb_cnt: %d, miter: %d", olb_cnt, Miter);
+      end else begin
+        $display("failed, olb_cnt: %d, miter: %d", olb_cnt, Miter);
+      end
+    end else begin //hlb
+      if(finished && hlb_cnt == 4 && Miter == 8'd195) begin
+        $display("passed, hlb_cnt: %d, miter: %d", hlb_cnt, Miter);
+      end else begin
+        $display("passed, hlb_cnt: %d, miter: %d", hlb_cnt, Miter);
+      end
+    end
+  endtask
+  
+  initial begin
+    $dumpfile("waveform.fst");
+    $dumpvars(0, layer_controller_tb.sv);
+  	n_rst = 1'b1;
+  	$timeformat(-9, 2, " ns", 20);
+  	reset();
+  	@(posedge clk);
+  	#(10);  
+
+    //tests
+    test(0); //hidden layer
+    reset();
+    test(1); //output layer
+    
+    $finish;
+  end
 endmodule
