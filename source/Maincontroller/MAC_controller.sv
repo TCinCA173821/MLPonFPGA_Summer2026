@@ -39,7 +39,7 @@ module MAC_controller(
             PULLBIAS: nxtstate = Id ? LOADBIAS : PULLBIAS;
             LOADBIAS: nxtstate = PULLINPUT;
             PULLINPUT: nxtstate = Id ? COMPUTE : PULLINPUT;
-            COMPUTE: nxtstate = (count == (Miter - 8'd1)) ? PULSEDONE : PULLINPUT;
+            COMPUTE: nxtstate = (count == Miter) ? PULSEDONE : PULLINPUT;
             PULSEDONE: nxtstate = IDLE;
             default: nxtstate = IDLE;
         endcase
@@ -61,6 +61,13 @@ module MAC_controller(
             end
             COMPUTE: MAC_s = 1'b1;
             PULSEDONE: Md = 1'b1;
+			default: begin
+				Md = 1'b0;
+        		MAC_s = 1'b0;
+        		MAC_l = 1'b0;
+        		Irq = 1'b0;
+        		Itype = 1'b0;
+			end
         endcase
     end
 endmodule
