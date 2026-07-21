@@ -64,8 +64,14 @@ module input_controller(
                 Id = 1'b1;   
                 HLBincr = Itype;
             end
+			default: begin
+				MAC_in_nxt = MAC_in;
+				HLBren = 1'b0;
+				HLBincr = 1'b0;
+				Id = 1'b0;
+				SPI_rq = 1'b0;
+			end
         endcase
     end
 endmodule
-
 
