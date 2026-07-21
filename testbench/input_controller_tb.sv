@@ -1,5 +1,6 @@
-module inputcontroller_tb;
-    logic clk;
+module input_controller_tb;
+    
+	logic clk;
     logic n_rst;
     logic Irq;
     logic Itype;
@@ -47,13 +48,15 @@ module inputcontroller_tb;
         cycles = 0;
         finished = '0;
         
+		SPI_dv = '1;
+        SPI_d = test_SPI_d;
+        HLBrdata = test_HLBrdata;
+		Itype = test_Itype;
+
         Irq = '1;
         @(posedge clk);
         #(1);
         Irq = '0;
-        SPI_dv = '1;
-        SPI_d = test_SPI_d;
-        HLBrdata = test_HLBrdata;
 
         //expected MAC_in logic
         for(int j = 0; j < 4; j++) begin
@@ -70,23 +73,23 @@ module inputcontroller_tb;
         #(1);
 
         if(test_Itype) begin //from HLB
-            if(finished && HLBren_cnt == 1 && HLBincr_cnt == 1 && SPI_rq_cnt = 1) begin
-                $display("passed, HLBren cnt: %d, HLBincr_cnt: %d, SPI_rq_cnt: %d", HLBren_cnt, HLBincr_cnt, SPI_rq_cnt);
+            if(finished && HLBren_cnt == 2 && HLBincr_cnt == 1 && SPI_rq_cnt == 1 && MAC_in == expected_MAC_in) begin
+                $display("passed, HLBren cnt: %h, HLBincr_cnt: %h, SPI_rq_cnt: %h, MAC_in: %h", HLBren_cnt, HLBincr_cnt, SPI_rq_cnt, MAC_in);
             end else begin
-                $display("failed, HLBren cnt: %d, HLBincr_cnt: %d, SPI_rq_cnt: %d", HLBren_cnt, HLBincr_cnt, SPI_rq_cnt);
+                $display("passed, HLBren cnt: %h, HLBincr_cnt: %h, SPI_rq_cnt: %h, MAC_in: %h", HLBren_cnt, HLBincr_cnt, SPI_rq_cnt, MAC_in);
             end
         end else begin
-            if(finished && HLBren_cnt == 0 && HLBincr_cnt == 0 && SPI_rq_cnt = 1) begin
-                $display("passed, HLBren cnt: %d, HLBincr_cnt: %d, SPI_rq_cnt: %d", HLBren_cnt, HLBincr_cnt, SPI_rq_cnt);
+            if(finished && HLBren_cnt == 0 && HLBincr_cnt == 0 && SPI_rq_cnt == 1 && MAC_in == expected_MAC_in) begin
+                $display("passed, HLBren cnt: %h, HLBincr_cnt: %h, SPI_rq_cnt: %h, MAC_in: %h", HLBren_cnt, HLBincr_cnt, SPI_rq_cnt, MAC_in);
             end else begin
-                $display("failed, HLBren cnt: %d, HLBincr_cnt: %d, SPI_rq_cnt: %d", HLBren_cnt, HLBincr_cnt, SPI_rq_cnt);
+                $display("passed, HLBren cnt: %h, HLBincr_cnt: %h, SPI_rq_cnt: %h, MAC_in: %h", HLBren_cnt, HLBincr_cnt, SPI_rq_cnt, MAC_in);
             end
         end
     endtask
     
     initial begin
         $dumpfile("waveform.fst");
-        $dumpvars(0, MAC_controller_tb.sv);
+        $dumpvars(0, input_controller_tb.sv);
   	    n_rst = 1'b1;
   	    $timeformat(-9, 2, " ns", 20);
   	    reset();
