@@ -5,9 +5,9 @@ module input_controller(
     input logic Itype,
     input logic SPI_dv,
     input logic [31:0] SPI_d,
-    input logic [15:0] HLBrdata,            //[1,2,3,4]
+    input logic [15:0] HLBrdata,
     output logic Id,
-    output logic [31:0] MAC_in,      // [1,2,3,4]
+    output logic [31:0] MAC_in,
     output logic HLBren,
     output logic HLBincr,
     output logic SPI_rq
@@ -22,7 +22,7 @@ module input_controller(
     } state_t;
     
     state_t curstate, nxtstate;
-    logic [31:0] MAC_in_nxt;         // packed 4x8-bit
+    logic [31:0] MAC_in_nxt;
 
     always_ff @(posedge clk, negedge n_rst) begin
         if(!n_rst) curstate <= IDLE;
