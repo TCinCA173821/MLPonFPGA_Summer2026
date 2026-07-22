@@ -8,7 +8,7 @@ module mainctrlfsm_tb;
     logic Aen;
     logic Done;
 
-    mainctrlfsm DUT(
+    main_ctrlfsm DUT(
         .clk(clk), .n_rst(n_rst), .start(start), .Ld(Ld), .Ad(Ad),
         .Len(Len), .Lsel(Lsel), .Aen(Aen), .Done(Done)
     );
