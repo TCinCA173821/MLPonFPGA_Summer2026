@@ -26,7 +26,7 @@ module controllertop_tb;
 
     //update counters
     always @(posedge clk) begin
-        if(nxtpckt) nxtpck_cnt++;
+        if(nxtpckt) nxtpckt_cnt++;
         if(Done) finished = 1'b1;
     end
 
@@ -61,9 +61,9 @@ module controllertop_tb;
         end
 
         if(finished) begin
-            $display("done asserted, cycle count: %d, nxtpckt count: %d", cycles, nxtpckt_count);
+            $display("done asserted, cycle count: %d, nxtpckt count: %d", cycles, nxtpckt_cnt);
         end else begin
-            $display("done NOT asserted, cycle count: %d, nxtpckt count: %d", cycles, nxtpckt_count);
+            $display("done NOT asserted, cycle count: %d, nxtpckt count: %d", cycles, nxtpckt_cnt);
         end
     endtask
     
