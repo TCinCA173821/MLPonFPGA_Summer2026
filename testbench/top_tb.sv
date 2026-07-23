@@ -12,15 +12,18 @@ module tob_tb;
   always #(2) pb[11]++;
 
   task reset();
-      	reset = 1'b1;
-      	repeat(2) @(posedge clk);
-      	reset = 1'b0;
-      	@(posedge clk);
-      	#(1);
+    reset = 1'b1;
+    repeat(2) @(posedge clk);
+    reset = 1'b0;
+    @(posedge clk);
+    #(1);
   endtask
 
   task test();
-
+    pb[9] = 1'b1;
+    @(posedge clk);
+    #(1);
+    pb[9] = 1'b0;
   endtask
   
   initial begin
