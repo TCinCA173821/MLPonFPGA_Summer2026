@@ -59,7 +59,7 @@ module mainctrlfsm_tb;
         if(Done) begin
             $display("finished successfully");
         end else begin
-            $displau("finish failed");
+            $display("finish failed");
         end
     end
     endtask
