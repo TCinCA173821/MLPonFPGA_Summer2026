@@ -8,6 +8,8 @@ module tob_tb;
   logic txready, rxready;
 
   top DUT(.*);
+  always #(10) hz100++;
+  always #(2) pb[11]++;
 
   task reset();
       	reset = 1'b1;
