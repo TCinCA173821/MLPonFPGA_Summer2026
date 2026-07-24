@@ -14,6 +14,7 @@ module tob_tb;
   int cycles = 0;
   int i = 0;
   logic finished;
+  logic[7:0] test_biases [0:25]
 
   task reset();
     reset = 1'b1;
@@ -24,7 +25,8 @@ module tob_tb;
   endtask
 
   task send_data(
-    input logic [7:0] test_input;
+    input logic [7:0] test_input,
+    input logic [3:0] expected
   );
     pb[10] = 1'b1;
     pb[19:12] = test_input;
@@ -51,6 +53,12 @@ module tob_tb;
       
       if(left[0]) finished = 1'b1;
     end
+
+    if(finished && left[5:2] == out) begin
+      $display("passed: expected: %d, out: %d", expected, out);
+    end else begin
+      $display("failed: expected: %d, out: %d", expected, out);
+    end
   endtask
   
   initial begin
@@ -62,7 +70,12 @@ module tob_tb;
     @(posedge clk);
     #(10); 
 
+    for(int i = 0; i < 26; i++) begin
+      test_biases[i] = 1'd1;
+    end
+    test_biases[25] = 1'd100;
 
+    test(test_biases, 3'd9);
     
     $finish();
   end
