@@ -51,11 +51,11 @@ module top (
   genvar i;
     generate
         for (i = 0; i < 4; i = i + 1) begin : gen_mac
-          MAC MAC_inst (.*,.n_rst(!reset),.MAC_in(MAC_in[8*i +:8]),.MAC_out(MAC_out[8*i +:8]),.MAC_outrelu(MAC_outrelu[4*i +:4]));
+          MAC MAC_inst (.*,.n_rst(!reset),.MAC_in(MAC_in[8*i +:8]),.MAC_out(MAC_out[16*i +:16]),.MAC_outrelu(MAC_outrelu[4*i +:4]));
         end
     endgenerate
-  hidden_layer_buffer hlb1 (.*, .n_rst(!reset),.wen(HLBwen),.ren(HLBren),.incr(HLBincr),.in(MAC_outrelu),.out(HLBrdata));
-  output_layer_buffer olb1 (.*,.n_rst(!reset),.wen(OLBwen),.r_inc(OLBincr),.in(MAC_out),.out_data(OLBrdata),.rptr(OLBrptr));
+  hidden_layer_buffer hlb1 (.*, .nrst(!reset),.wen(HLBwen),.ren(HLBren),.incr(HLBincr),.in(MAC_outrelu),.out(HLBrdata));
+  output_layer_buffer olb1 (.*,.nrst(!reset),.wen(OLBwen),.r_inc(OLBincr),.in(MAC_out),.out_data(OLBrdata),.rptr(OLBrptr));
   argmax argmax1 (.*,.nrst(!reset),.start(ARG_s),.in(OLBrdata),.in_ptr(OLBrptr),.out(result));
   ssdec decoder1 (.digit(result),.ss0(ss0));
   
@@ -285,6 +285,7 @@ module controllertop(
 
 endmodule
 
+
 module main_ctrlfsm(
     input logic clk,
     input logic n_rst,
@@ -336,9 +337,11 @@ module main_ctrlfsm(
             end
             ARGMAX: Aen = 1'b1;
             PULSEDONE: Done = 1'b1;
+			default:;
         endcase
     end
 endmodule
+
 
 module MAC_controller(
     input logic clk,
@@ -381,11 +384,11 @@ module MAC_controller(
             PULLBIAS: nxtstate = Id ? LOADBIAS : PULLBIAS;
             LOADBIAS: nxtstate = PULLINPUT;
             PULLINPUT: nxtstate = Id ? COMPUTE : PULLINPUT;
-            COMPUTE: nxtstate = (count == (Miter - 8'd1)) ? PULSEDONE : PULLINPUT;
+            COMPUTE: nxtstate = (count == Miter) ? PULSEDONE : PULLINPUT;
             PULSEDONE: nxtstate = IDLE;
             default: nxtstate = IDLE;
         endcase
-        nxtcount = (curstate == COMPUTE) ? count + 8'd1 : count;
+        nxtcount = (curstate == COMPUTE) ? (count == Miter) ? 8'd0: count + 8'd1 : count;
     end
 
     always_comb begin
@@ -403,9 +406,20 @@ module MAC_controller(
             end
             COMPUTE: MAC_s = 1'b1;
             PULSEDONE: Md = 1'b1;
+			default: begin
+				Md = 1'b0;
+        		MAC_s = 1'b0;
+        		MAC_l = 1'b0;
+        		Irq = 1'b0;
+        		Itype = 1'b0;
+			end
         endcase
     end
 endmodule
+
+
+    
+
 
 
     
@@ -437,7 +451,7 @@ module layer_controller (
 		case(state)
 			IDLE: next_state = (Len) ? MAC : IDLE;
 			MAC: next_state = (Md) ? STORE : MAC;
-			STORE: next_state = (next_cnt == total_layers) ? DONE : MAC;
+			STORE: next_state = (layer_cnt == total_layers) ? DONE : MAC;
 			DONE: next_state = IDLE;
 			default: next_state = IDLE;
 		endcase
@@ -446,7 +460,7 @@ module layer_controller (
 	always_ff @(posedge clk, negedge n_rst) begin
 	if(!n_rst) begin
 		state <= IDLE;
-		layer_cnt <= 1'b0;
+		layer_cnt <= 2'b0;
 	end else begin
 		state <= next_state;
 		layer_cnt <= next_cnt;
@@ -463,7 +477,7 @@ module layer_controller (
 	HLBwen = 1'b0;
 		
 		case(state)
-			IDLE: next_cnt = 1'b0;
+			IDLE: next_cnt = 2'b0;
 			MAC: Men = 1'b1;
 			STORE: begin
 				next_cnt = layer_cnt + 2'd1;
@@ -475,6 +489,7 @@ module layer_controller (
 	end
 endmodule
 
+
 module input_controller(
     input logic clk,
     input logic n_rst,
@@ -482,9 +497,9 @@ module input_controller(
     input logic Itype,
     input logic SPI_dv,
     input logic [31:0] SPI_d,
-    input logic [15:0] HLBrdata,            //[1,2,3,4]
+    input logic [15:0] HLBrdata,
     output logic Id,
-    output logic [31:0] MAC_in,      // [1,2,3,4]
+    output logic [31:0] MAC_in,
     output logic HLBren,
     output logic HLBincr,
     output logic SPI_rq
@@ -499,7 +514,7 @@ module input_controller(
     } state_t;
     
     state_t curstate, nxtstate;
-    logic [31:0] MAC_in_nxt;         // packed 4x8-bit
+    logic [31:0] MAC_in_nxt;
 
     always_ff @(posedge clk, negedge n_rst) begin
         if(!n_rst) curstate <= IDLE;
@@ -541,9 +556,18 @@ module input_controller(
                 Id = 1'b1;   
                 HLBincr = Itype;
             end
+			default: begin
+				MAC_in_nxt = MAC_in;
+				HLBren = 1'b0;
+				HLBincr = 1'b0;
+				Id = 1'b0;
+				SPI_rq = 1'b0;
+			end
         endcase
     end
 endmodule
+
+
 
 
 module argmax_controller (
@@ -596,7 +620,7 @@ always_comb begin
 	next_node = node;
 
 	case(state)
-		IDLE: next_node = 1'b0;
+		IDLE: next_node = 4'b0;
         RUN: ARG_s = 1'b1;
 		INCR: begin
 			OLBincr = 1'b1;
@@ -606,6 +630,7 @@ always_comb begin
 	endcase
 end
 endmodule
+
 
 
 module mixedsign4bitmult(
@@ -641,7 +666,7 @@ module accreg(
     end
 
     always_comb begin
-        if (len) reg_val_nxt = $signed(Lin);
+        if (len) reg_val_nxt = { {8{Lin[7]}}, Lin};
         else if(wen) reg_val_nxt = in;
         else reg_val_nxt = reg_val;
     end
@@ -687,7 +712,7 @@ module hidden_layer_buffer (
 	output logic [15:0] out
 );
 
-logic [15:0] mem_layers [3:0];
+logic [63:0] mem_layers;
 logic [1:0] ptr;
 
 //ptr increment
@@ -702,9 +727,9 @@ end
 //write
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		for (int i = 0; i < 4; i++) mem_layers[i] <= 16'd0;
+		for (int i = 0; i < 4; i++) mem_layers[16*i +:16] <= 16'd0;
 	end else if(wen) begin
-		mem_layers <= {in, mem_layers[3], mem_layers[2], mem_layers[1]};
+		mem_layers <= {in, mem_layers[63:48], mem_layers[47:32], mem_layers[31:16]};
 	end
 end
 
@@ -713,7 +738,7 @@ always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		out <= 16'b0;
 	end else if (ren) begin
-		out <= mem_layers[ptr];
+		out <= mem_layers[ptr*16 +:16];
 	end
 end
 	
@@ -742,5 +767,3 @@ always_ff @(posedge clk or negedge nrst) begin
 	end
 end
 endmodule
-
-
