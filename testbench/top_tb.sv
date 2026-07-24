@@ -9,7 +9,11 @@ module tob_tb;
 
   top DUT(.*);
   always #(10) hz100++;
-  always #(2) pb[11]++;
+  always #(40) pb[11]++;
+
+  int cycles = 0;
+  int i = 0;
+  logic finished;
 
   task reset();
     reset = 1'b1;
@@ -19,11 +23,34 @@ module tob_tb;
     #(1);
   endtask
 
-  task test();
+  task send_data(
+    input logic [7:0] test_input;
+  );
+    pb[10] = 1'b1;
+    pb[19:12] = test_input;
+    @(posedge SCLK);
+    #(1);
+    pb[10] = 1'b0;
+  endtask
+  
+  task test(
+    input logic[7:0] test_biases [0:25]
+  );
     pb[9] = 1'b1;
     @(posedge clk);
     #(1);
     pb[9] = 1'b0;
+
+    while(!finished && cycles < 100000) begin
+      if(left[1]) begin
+        if(((i % 196 == 0) && i < 784) || ((i - 784) % 16 == 0)) begin
+          send_data(test_data[i]);
+        end 
+        i++;
+      end
+      
+      if(left[0]) finished = 1'b1;
+    end
   endtask
   
   initial begin
