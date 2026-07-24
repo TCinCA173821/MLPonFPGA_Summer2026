@@ -43,7 +43,7 @@ module MAC_controller(
             PULSEDONE: nxtstate = IDLE;
             default: nxtstate = IDLE;
         endcase
-        nxtcount = (curstate == COMPUTE) ? count + 8'd1 : count;
+        nxtcount = (curstate == COMPUTE) ? (count == Miter) ? 8'd0: count + 8'd1 : count;
     end
 
     always_comb begin
