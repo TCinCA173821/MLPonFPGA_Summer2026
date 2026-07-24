@@ -15,6 +15,7 @@ module top_tb;
   int i = 0;
   logic finished;
   logic[7:0] test_biases [0:25];
+  int bias_ptr = 0;
 
   task rst();
     reset = 1'b1;
@@ -25,12 +26,15 @@ module top_tb;
   endtask
 
   task send_data(
-    input logic [7:0] test_input
+    input logic [31:0] test_input
   );
     pb[10] = 1'b1;
-    pb[19:12] = test_input;
-    @(posedge pb[11]);
-    #(1);
+	for(int i = 0; i < 4; i++) begin	
+	    pb[19:12] = test_input[8*i +: 8];
+    	@(posedge pb[11]);
+		#(1);
+	end
+    #(10);
     pb[10] = 1'b0;
   endtask
   
@@ -46,12 +50,16 @@ module top_tb;
     while(!finished && cycles < 100000) begin
       if(left[1]) begin
         if(((i % 196 == 0) && i < 784) || ((i - 784) % 16 == 0)) begin
-          send_data(test_data[i]);
+          send_data({24'b0, test_data[bias_ptr]});
+		  if(bias_ptr < 25) bias_ptr++;
         end 
         i++;
       end
       
       if(left[0]) finished = 1'b1;
+	  @(posedge hz100);
+	  #(1);
+	  cycles++;
     end
 
     if(finished && (left[5:2] == expected)) begin
@@ -71,7 +79,7 @@ module top_tb;
     #(10); 
 
     for(int i = 0; i < 26; i++) begin
-      test_biases[i] = 1'd1;
+      test_biases[i] = 8'd1;
     end
     test_biases[25] = 8'd100;
 
