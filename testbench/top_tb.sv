@@ -12,10 +12,13 @@ module top_tb;
   always #(40) pb[11]++;
 
   int cycles = 0;
-  int i = 0;
+  int req_cnt = 0;
   logic finished;
   logic[7:0] test_biases [0:25];
   int bias_ptr = 0;
+  logic nxt_d;
+
+  always @(posedge hz100) nxt_d <= left[1];
 
   task rst();
     reset = 1'b1;
@@ -26,15 +29,16 @@ module top_tb;
   endtask
 
   task send_data(
-    input logic [31:0] test_input
+    input logic [31:0] test_input,
+	input logic isbias
   );
     pb[10] = 1'b1;
 	for(int i = 0; i < 4; i++) begin	
 	    pb[19:12] = test_input[8*i +: 8];
+		if(isbias) $display("bias sent: %d", pb[19:12]);
     	@(posedge pb[11]);
 		#(1);
 	end
-    #(10);
     pb[10] = 1'b0;
   endtask
   
@@ -47,13 +51,18 @@ module top_tb;
     #(1);
     pb[9] = 1'b0;
 
-    while(!finished && cycles < 100000) begin
-      if(left[1]) begin
-        if(((i % 196 == 0) && i < 784) || ((i - 784) % 16 == 0)) begin
-          send_data({24'b0, test_data[bias_ptr]});
-		  if(bias_ptr < 25) bias_ptr++;
-        end 
-        i++;
+    while(!finished && cycles < 200000) begin
+      if(left[1] && !nxt_d) begin
+        if(req_cnt == 0   || req_cnt == 197 || req_cnt == 394 || req_cnt == 591 ||
+          req_cnt == 788 || req_cnt == 805 || req_cnt == 822) begin
+          send_data({test_data[bias_ptr+3], test_data[bias_ptr+2], test_data[bias_ptr+1], test_data[bias_ptr+0]}, 1'b1);
+		  if(bias_ptr < 25) bias_ptr+=4;
+		  $display("bias sent: bias ptr: %d, req cnt: %d", bias_ptr, req_cnt);
+		  req_cnt++;
+        end else begin
+		  send_data(32'b0, 1'b0);
+		  req_cnt++;
+		end
       end
       
       if(left[0]) finished = 1'b1;
@@ -63,9 +72,9 @@ module top_tb;
     end
 
     if(finished && (left[5:2] == expected)) begin
-      $display("passed: expected: %d, out: %d", expected, left[5:2]);
+      $display("passed: expected: %d, out: %d, reqcnt: %d", expected, left[5:2], req_cnt);
     end else begin
-      $display("failed: expected: %d, out: %d", expected, left[5:2]);
+      $display("failed: expected: %d, out: %d, reqcnt: %d", expected, left[5:2], req_cnt);
     end
   endtask
   
@@ -79,11 +88,11 @@ module top_tb;
     #(10); 
 
     for(int i = 0; i < 26; i++) begin
-      test_biases[i] = 8'd1;
+      test_biases[i] = 8'd1 + 8'(i);
     end
-    test_biases[25] = 8'd100;
+    test_biases[23] = 8'd100;
 
-    test(test_biases, 4'd9);
+    test(test_biases, 4'd7);
     
     $finish();
   end
