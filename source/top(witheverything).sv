@@ -78,7 +78,7 @@ module SPI_shiftreg (
     end
 
     always_comb begin
-        regnxt = cs ? {mosi, intreg[31:8]} : intreg;
+        regnxt = cs ? {intreg[23:0], mosi} : intreg;
     end
     assign SPI_reg = intreg;
 endmodule
