@@ -15,9 +15,9 @@ logic [3:0] ptr;
 //ptr increment
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		ptr <= 2'b00;
+		ptr <= 4'b00;
 	end else if (incr) begin
-		ptr <= ptr + 1'b1;
+		ptr <= ptr + 4'd1;
 	end
 end
 
@@ -26,16 +26,16 @@ always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		for (int i = 0; i < 4; i++) mem_layers[16*i +:16] <= 16'd0;
 	end else if(wen) begin
-		mem_layers <= {in, mem_layers[63:48], mem_layers[47:32], mem_layers[31:16]};
+		mem_layers <= {mem_layers[47:0], in[3:0], in[7:4], in[11:8], in[15:12]};
 	end
 end
 
 //output
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		out <= 16'b0;
+		out <= 4'b0;
 	end else if (ren) begin
-		out <= mem_layers[63 - ptr*4 -:4];
+		out <= mem_layers[63 - (ptr[3:0]*4) -: 4];
 	end
 end
 	
