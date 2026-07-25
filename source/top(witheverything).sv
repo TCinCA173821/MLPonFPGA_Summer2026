@@ -690,7 +690,7 @@ module MAC(
     input logic [7:0] MAC_in,
     input logic MAC_s,
     input logic MAC_l,
-    output logic signed [15:0] MAC_out,
+	output logic signed [15:0] MAC_out
     output logic [3:0] MAC_outrelu
 );
     logic signed [15:0] mult_out, reg_in;
@@ -709,11 +709,12 @@ module hidden_layer_buffer (
 	input logic ren,
 	input logic incr,
 	input logic [15:0] in, //4x4 bits
-	output logic [15:0] out
+	output logic [3:0] out
 );
 
 logic [63:0] mem_layers;
-logic [1:0] ptr;
+logic [3:0] ptr;
+
 
 //ptr increment
 always_ff @(posedge clk or negedge nrst) begin
@@ -738,7 +739,7 @@ always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		out <= 16'b0;
 	end else if (ren) begin
-		out <= mem_layers[ptr*16 +:16];
+		out <= mem_layers[63 - ptr*4 -:4];
 	end
 end
 	
