@@ -18,7 +18,7 @@ module top (
 
   logic start, SPI_dv, Done, MAC_s, MAC_l, HLBren, HLBincr, HLBwen, OLBincr, OLBwen, nxtpckt, ARG_s;
   logic [31:0] SPI_reg;
-  logic [15:0] HLBrdata;
+  logic [3:0] HLBrdata;
   logic [31:0] MAC_in;
 
   logic cs, sclk, nxtpckt_to_pi;
@@ -78,7 +78,7 @@ module SPI_shiftreg (
     end
 
     always_comb begin
-        regnxt = cs ? {intreg[23:0], mosi} : intreg;
+        regnxt = cs ? {intreg[23:0],mosi} : intreg;
     end
     assign SPI_reg = intreg;
 endmodule
@@ -220,10 +220,10 @@ always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		for (int i = 0; i < 12; i++) output_reg[i] <= 16'b0;
 	end else if (wen) begin
-		output_reg[wptr] <= in[16*3 +: 16];
-		output_reg[wptr+4'd1] <= in[16*2 +: 16];
-		output_reg[wptr+4'd2] <= in[16*1 +: 16];
-		output_reg[wptr+4'd3] <= in[16*0 +: 16];
+		output_reg[wptr] <= in[16*0 +: 16];
+		output_reg[wptr+4'd1] <= in[16*1 +: 16];
+		output_reg[wptr+4'd2] <= in[16*2 +: 16];
+		output_reg[wptr+4'd3] <= in[16*3 +: 16];
 	end
 end
 
@@ -249,7 +249,7 @@ module controllertop(
     input logic clk,
     input logic n_rst,
     input logic start,
-    input logic [15:0] HLBrdata,      // [1,2,3,4] order
+    input logic [3:0] HLBrdata,      // [1,2,3,4] order
     input logic SPI_dv,
     input logic [31:0] SPI_reg,
     output logic Done,
@@ -690,7 +690,7 @@ module MAC(
     input logic [7:0] MAC_in,
     input logic MAC_s,
     input logic MAC_l,
-	output logic signed [15:0] MAC_out
+	output logic signed [15:0] MAC_out,
     output logic [3:0] MAC_outrelu
 );
     logic signed [15:0] mult_out, reg_in;
@@ -719,9 +719,9 @@ logic [3:0] ptr;
 //ptr increment
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		ptr <= 2'b00;
+		ptr <= 4'b00;
 	end else if (incr) begin
-		ptr <= ptr + 1'b1;
+		ptr <= ptr + 4'd1;
 	end
 end
 
@@ -730,16 +730,16 @@ always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		for (int i = 0; i < 4; i++) mem_layers[16*i +:16] <= 16'd0;
 	end else if(wen) begin
-		mem_layers <= {in, mem_layers[63:48], mem_layers[47:32], mem_layers[31:16]};
+		mem_layers <= {mem_layers[47:0], in};
 	end
 end
 
 //output
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		out <= 16'b0;
+		out <= 4'b0;
 	end else if (ren) begin
-		out <= mem_layers[63 - ptr*4 -:4];
+		out <= mem_layers[63 - (ptr[3:0]*4) -: 4];
 	end
 end
 	
@@ -760,7 +760,7 @@ logic load_en;
 //register
 always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
-		out_reg <= 16'b0;
+		out_reg <= 16'h8000;
 		out <= 4'b0;
 	end else if(start && (in > out_reg)) begin
 		out_reg <= in;
