@@ -730,7 +730,7 @@ always_ff @(posedge clk or negedge nrst) begin
 	if(!nrst) begin
 		for (int i = 0; i < 4; i++) mem_layers[16*i +:16] <= 16'd0;
 	end else if(wen) begin
-		mem_layers <= {mem_layers[47:0], in};
+		mem_layers <= {mem_layers[47:0], in[3:0], in[7:4], in[11:8], in[15:12]};
 	end
 end
 
