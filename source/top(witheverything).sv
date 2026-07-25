@@ -497,7 +497,7 @@ module input_controller(
     input logic Itype,
     input logic SPI_dv,
     input logic [31:0] SPI_d,
-    input logic [15:0] HLBrdata,
+	input logic [3:0] HLBrdata,
     output logic Id,
     output logic [31:0] MAC_in,
     output logic HLBren,
@@ -549,7 +549,7 @@ module input_controller(
             BUFFER: begin 
                 HLBren = Itype;
                 for(int j = 0; j < 4; j++) begin
-                    MAC_in_nxt[8*j +: 8] = {SPI_d[31-8*j -: 4], Itype ? HLBrdata[4*j +: 4] : SPI_d[27-8*j -: 4]};
+                    MAC_in_nxt[8*j +: 8] = {SPI_d[31-8*j -: 4], Itype ? HLBrdata : SPI_d[27-8*j -: 4]};
                 end
             end
             PULSEDONE: begin 
