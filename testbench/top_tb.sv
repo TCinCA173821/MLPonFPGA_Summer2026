@@ -55,7 +55,7 @@ module top_tb;
       if(left[1] && !nxt_d) begin
         if(req_cnt == 0   || req_cnt == 197 || req_cnt == 394 || req_cnt == 591 ||
           req_cnt == 788 || req_cnt == 805 || req_cnt == 822) begin
-          send_data({test_data[bias_ptr+3], test_data[bias_ptr+2], test_data[bias_ptr+1], test_data[bias_ptr+0]}, 1'b1);
+			send_data({test_data[bias_ptr+0], test_data[bias_ptr+1], test_data[bias_ptr+2], test_data[bias_ptr+3]}, 1'b1);
 		  if(bias_ptr < 25) bias_ptr+=4;
 		  $display("bias sent: bias ptr: %d, req cnt: %d", bias_ptr, req_cnt);
 		  req_cnt++;
