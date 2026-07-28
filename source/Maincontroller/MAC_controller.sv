@@ -35,11 +35,23 @@ module MAC_controller(
 
     always_comb begin
         case(curstate)
-            IDLE: nxtstate = Men ? PULLBIAS : IDLE;
-            PULLBIAS: nxtstate = Id ? LOADBIAS : PULLBIAS;
+            IDLE: begin
+                if (Men) nxtstate = PULLBIAS;
+                else nxtstate = IDLE;
+            end
+            PULLBIAS: begin
+                if (Id) nxtstate = LOADBIAS;
+                else nxtstate = PULLBIAS;
+            end
             LOADBIAS: nxtstate = PULLINPUT;
-            PULLINPUT: nxtstate = Id ? COMPUTE : PULLINPUT;
-            COMPUTE: nxtstate = (count == Miter) ? PULSEDONE : PULLINPUT;
+            PULLINPUT: begin
+                if (Id) nxtstate = COMPUTE;
+                else nxtstate = PULLINPUT;
+            end
+            COMPUTE: begin
+                if (count == Miter) nxtstate = PULSEDONE;
+                else nxtstate = PULLINPUT;
+            end
             PULSEDONE: nxtstate = IDLE;
             default: nxtstate = IDLE;
         endcase

@@ -43,10 +43,20 @@ module SPI_FSM(
 
     always_comb begin
         case(curstate)
-            IDLE: nxtstate = nxtpckt ? RQ : IDLE;
-            RQ: nxtstate = sync_cs ? RECEIVE : RQ;
-            RECEIVE: nxtstate = sync_cs ? RECEIVE : PULSEDV;
+            IDLE: begin
+                if (nxtpckt) nxtstate = RQ;
+                else nxtstate = IDLE;
+            end
+            RQ: begin
+                if (sync_cs) nxtstate = RECEIVE;
+                else nxtstate = RQ;
+            end
+            RECEIVE: begin
+                if (sync_cs) nxtstate = RECEIVE;
+                else nxtstate = PULSEDV;
+            end
             PULSEDV: nxtstate = IDLE;
+            default: nxtstate = IDLE;
         endcase
     end
 

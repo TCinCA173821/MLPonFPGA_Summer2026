@@ -1,0 +1,62 @@
+.program sendpckt
+.side_set 2
+
+; Parallel 8-bit packet transmitter.
+; OUT pins: GP2-GP9
+; side-set bit 0: SCLK (GP10)
+; side-set bit 1: CS   (GP11)
+; WAIT pin: NXTPCKT   (GP13)
+;
+; DMA continuously supplies one 32-bit word per packet. The state machine
+; waits for each FPGA request before pulling the next word, sends four bytes,
+; holds CS high until the FPGA acknowledges, then signals packet completion.
+.wrap_target
+    ; NXTPCKT is physically Pico GP13. Use the absolute GPIO form so this
+    ; handshake does not depend on the state machine's input-base mapping.
+    wait 1 gpio 13          side 0b00
+    pull block              side 0b00
+byte_loop:
+    ; Two delayed instructions per phase preserve the timing margin proven by
+    ; the slow GPIO test. At the configured divider each phase is about 8 ms.
+    out pins, 8             side 0b10 [7]
+    nop                     side 0b10 [7]
+    nop                     side 0b11 [7]
+    nop                     side 0b11 [7]
+    jmp !osre byte_loop     side 0b10 [7]
+    nop                     side 0b10 [7]
+    wait 0 gpio 13          side 0b10
+    nop                     side 0b00 [7]
+    ; Stall until the CPU interrupt handler records and clears completion.
+    irq wait 0              side 0b00
+.wrap
+
+% c-sdk {
+static inline void sendpckt_init(PIO pio, uint sm, uint offset,
+                                 uint data_base, uint clk_pin, uint cs_pin,
+                                 uint ready_pin, float div) {
+    for (uint i = 0; i < 8; ++i) {
+        pio_gpio_init(pio, data_base + i);
+    }
+    pio_gpio_init(pio, clk_pin);
+    pio_gpio_init(pio, cs_pin);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, data_base, 8, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, clk_pin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, cs_pin, 1, true);
+
+    pio_sm_config config = sendpckt_program_get_default_config(offset);
+    sm_config_set_out_pins(&config, data_base, 8);
+    sm_config_set_sideset_pins(&config, clk_pin);
+    sm_config_set_in_pins(&config, ready_pin);
+    /*
+     * The program explicitly pulls one word per packet. Autopull must remain
+     * disabled or the fourth OUT can stall waiting for an unintended second
+     * word before CS is released.
+     */
+    sm_config_set_out_shift(&config, false, false, 32);
+    sm_config_set_clkdiv(&config, div);
+
+    pio_sm_init(pio, sm, offset, &config);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

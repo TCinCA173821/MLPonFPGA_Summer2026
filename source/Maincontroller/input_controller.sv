@@ -36,9 +36,15 @@ module input_controller(
 
     always_comb begin
         case(curstate)
-            IDLE: nxtstate = Irq ? RQ : IDLE;
+            IDLE: begin
+                if (Irq) nxtstate = RQ;
+                else nxtstate = IDLE;
+            end
             RQ: nxtstate = RECEIVING;
-            RECEIVING: nxtstate = SPI_dv ? BUFFER : RECEIVING;
+            RECEIVING: begin
+                if (SPI_dv) nxtstate = BUFFER;
+                else nxtstate = RECEIVING;
+            end
             BUFFER: nxtstate = PULSEDONE;
             PULSEDONE: nxtstate = IDLE;
             default: nxtstate = IDLE;

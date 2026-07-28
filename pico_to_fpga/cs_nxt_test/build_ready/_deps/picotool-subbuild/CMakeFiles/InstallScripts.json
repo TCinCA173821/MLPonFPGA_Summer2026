@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/harri/OneDrive/Documents/GitHub/MLPonFPGA_Summer2026/pico_to_fpga/cs_nxt_test/build_ready/_deps/picotool-subbuild/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

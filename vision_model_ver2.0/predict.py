@@ -16,7 +16,7 @@ from integer_inference import (
 
 BASE_DIR = Path(__file__).resolve().parent
 
-IMAGE_PATH = BASE_DIR / "demo_images" / "input.png"
+IMAGE_PATH = BASE_DIR / "demo_images" / "input9.png"
 MODEL_PATH = BASE_DIR / "models" / "quantized_model.pth"
 
 

@@ -51,11 +51,11 @@ module top (
   genvar i;
     generate
         for (i = 0; i < 4; i = i + 1) begin : gen_mac
-          MAC MAC_inst (.*,.n_rst(!reset),.MAC_in(MAC_in[8*i +:8]),.MAC_out(MAC_out[8*i +:8]),.MAC_outrelu(MAC_outrelu[4*i +:4]));
+          MAC MAC_inst (.*,.n_rst(!reset),.MAC_in(MAC_in[8*i +:8]),.MAC_out(MAC_out[16*i +:16]),.MAC_outrelu(MAC_outrelu[4*i +:4]));
         end
     endgenerate
-  hidden_layer_buffer hlb1 (.*, .n_rst(!reset),.wen(HLBwen),.ren(HLBren),.incr(HLBincr),.in(MAC_outrelu),.out(HLBrdata));
-  output_layer_buffer olb1 (.*,.n_rst(!reset),.wen(OLBwen),.r_inc(OLBincr),.in(MAC_out),.out_data(OLBrdata),.rptr(OLBrptr));
+  hidden_layer_buffer hlb1 (.*, .nrst(!reset),.wen(HLBwen),.ren(HLBren),.incr(HLBincr),.in(MAC_outrelu),.out(HLBrdata));
+  output_layer_buffer olb1 (.*,.nrst(!reset),.wen(OLBwen),.r_inc(OLBincr),.in(MAC_out),.out_data(OLBrdata),.rptr(OLBrptr));
   argmax argmax1 (.*,.nrst(!reset),.start(ARG_s),.in(OLBrdata),.in_ptr(OLBrptr),.out(result));
   ssdec decoder1 (.digit(result),.ss0(ss0));
   

@@ -29,10 +29,13 @@ add_executable(pico_to_fpga
     source/main.c
     source/weights.c
     source/form_packet.c
-    source/send_packet.c
+    source/dma_packet_stream.c
     source/usb_image.c
     source/handshake.c
-    source/bus_clock.c
+)
+
+pico_generate_pio_header(pico_to_fpga
+    ${CMAKE_CURRENT_LIST_DIR}/source/sendpckt.pio
 )
 
 target_include_directories(pico_to_fpga PRIVATE
@@ -41,6 +44,8 @@ target_include_directories(pico_to_fpga PRIVATE
 
 target_link_libraries(pico_to_fpga
     pico_stdlib
+    hardware_dma
+    hardware_pio
 )
 
 pico_enable_stdio_usb(pico_to_fpga 1)

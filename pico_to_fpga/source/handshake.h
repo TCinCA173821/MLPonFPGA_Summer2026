@@ -4,8 +4,11 @@
 /* Configure START as an output and NXTPCKT as an input. */
 void handshake_init(void);
 
-/* Pulse START high once the Pico has a complete image ready for inference. */
+/* Raise START once the Pico has a complete image ready for inference. */
 void send_start(void);
+
+/* Lower START after the FPGA acknowledges it with the first packet request. */
+void send_start_end(void);
 
 /* Block until the FPGA raises its active-high request for another packet. */
 void wait_for_next_packet(void);

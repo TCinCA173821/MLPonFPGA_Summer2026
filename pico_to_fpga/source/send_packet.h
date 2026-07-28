@@ -7,4 +7,7 @@ void send_packet_init(void);
 /* Send the four bytes currently stored in global pkt[] to the FPGA. */
 void send_packet(void);
 
+/* Lower chip select after the FPGA acknowledges the current packet. */
+void send_packet_end(void);
+
 #endif
