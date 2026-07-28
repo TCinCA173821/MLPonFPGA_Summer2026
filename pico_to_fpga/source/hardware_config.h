@@ -33,11 +33,8 @@
  * logic analyzer shows setup/hold violations or if the FPGA system clock needs
  * more time to synchronize CS.
  */
-#define BUS_DATA_SETUP_US 1u
-#define BUS_CLOCK_HIGH_US 1u
-#define BUS_DATA_HOLD_US 1u
-
-/* Width of the active-high start pulse sent once per image inference. */
-#define START_PULSE_US 10u
+#define BUS_DATA_SETUP_US 10000u
+#define BUS_CLOCK_HIGH_US 10000u
+#define BUS_DATA_HOLD_US 10000u
 
 #endif

@@ -1,0 +1,52 @@
+
+---
+events:
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Users/harri/.pico-sdk/sdk/2.3.0/cmake/preload/toolchains/util/find_compiler.cmake:12 (find_program)"
+      - "C:/Users/harri/.pico-sdk/sdk/2.3.0/cmake/preload/toolchains/util/find_compiler.cmake:39 (pico_find_compiler)"
+      - "C:/Users/harri/.pico-sdk/sdk/2.3.0/cmake/preload/toolchains/util/pico_gcc_common.cmake:25 (pico_find_compiler_with_triples)"
+      - "C:/Users/harri/.pico-sdk/sdk/2.3.0/cmake/preload/toolchains/util/pico_arm_gcc_common.cmake:14 (include)"
+      - "C:/Users/harri/.pico-sdk/sdk/2.3.0/cmake/preload/toolchains/pico_arm_cortex_m0plus_gcc.cmake:7 (include)"
+      - "C:/mingw64/share/cmake-4.1/Modules/CMakeDetermineSystem.cmake:146 (include)"
+      - "CMakeLists.txt:5 (project)"
+    mode: "program"
+    variable: "PICO_COMPILER_CC"
+    description: "Path to a program."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "arm-none-eabi-gcc"
+    found: false
+    search_context:
+      ENV{PATH}:
+        - "C:\\Users\\harri\\.codex\\tmp\\arg0\\codex-arg0n6Lkuu"
+        - "C:\\Users\\harri\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\bin\\override"
+        - "C:\\windows\\system32"
+        - "C:\\windows"
+        - "C:\\windows\\System32\\Wbem"
+        - "C:\\windows\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\windows\\System32\\OpenSSH\\"
+        - "C:\\Program Files\\dotnet\\"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\mingw64\\bin"
+        - "C:\\Program Files\\Docker\\Docker\\resources\\bin"
+        - "C:\\Users\\harri\\.local\\bin"
+        - "C:\\Users\\harri\\AppData\\Local\\Programs\\Python\\Python312\\Scripts\\"
+        - "C:\\Users\\harri\\AppData\\Local\\Programs\\Python\\Python312\\"
+        - "C:\\Users\\harri\\AppData\\Local\\Programs\\Python\\Launcher\\"
+        - "C:\\Users\\harri\\AppData\\Local\\Microsoft\\WindowsApps"
+        - "C:\\Users\\harri\\AppData\\Local\\Programs\\Microsoft VS Code\\bin"
+        - "C:\\platform-tools"
+        - "C:\\Users\\harri\\AppData\\Local\\GitHubDesktop\\bin"
+        - "C:\\Users\\harri\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\bin\\fallback"
+        - "C:\\Users\\harri\\AppData\\Local\\OpenAI\\Codex\\bin\\ada252862d154cdd"
+        - "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.715.7063.0_x64__2p2nqsd0c76g0\\app\\resources"
+...

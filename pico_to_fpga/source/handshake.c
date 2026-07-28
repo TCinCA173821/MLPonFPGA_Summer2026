@@ -21,9 +21,11 @@ void handshake_init(void) {
 }
 
 void send_start(void) {
-    /* The FPGA synchronizes this active-high pulse into its own clock domain. */
+    /* Hold START high until the FPGA acknowledges it with NXTPCKT. */
     gpio_put(START_TO_FPGA_PIN, 1);
-    busy_wait_us_32(START_PULSE_US);
+}
+
+void send_start_end(void) {
     gpio_put(START_TO_FPGA_PIN, 0);
 }
 
