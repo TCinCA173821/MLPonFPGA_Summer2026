@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#101215">
+<title>MNIST Digit Collector</title>
+<style>
+  :root {
+    --bg: #101215;
+    --panel: #191d22;
+    --panel-2: #22272e;
+    --line: #333a43;
+    --text: #e9edf2;
+    --muted: #98a2ae;
+    --accent: #4c9aff;
+    --accent-dim: #2b5ea8;
+    --good: #35c17b;
+    --bad: #e0524a;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 10px 14px 24px;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 4px 2px 10px;
+  }
+  header h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .2px; }
+  header .sub { font-size: 12px; color: var(--muted); }
+
+  /* ---------- digit tabs ---------- */
+  .digits {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .digit-tab {
+    appearance: none;
+    -webkit-appearance: none;
+    font: 600 30px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text);
+    background: var(--panel);
+    border: 2px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 0 14px;
+    touch-action: manipulation;
+    cursor: pointer;
+    position: relative;
+  }
+  .digit-tab .n {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: .3px;
+  }
+  .digit-tab[aria-selected="true"] {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+  }
+  .digit-tab[aria-selected="true"] .n { color: #cfe2ff; }
+
+  /* ---------- main layout ---------- */
+  .main {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  /* Flex line-breaking uses these bases, not the shrunk widths: 440 + 16 + 300
+     must stay under the iPad Pro 11" portrait content width (~806px) so the
+     panel never wraps below the canvas and push Save off-screen. */
+  .col-draw { flex: 0 1 440px; max-width: 440px; min-width: 250px; }
+  .col-side {
+    flex: 1 1 300px;
+    max-width: 460px;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px;
+  }
+  .card h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--muted);
+    margin: 0 0 9px;
+    font-weight: 700;
+  }
+
+  /* ---------- canvas ---------- */
+  /* The visible black square must be exactly the drawing surface, so the
+     border lives on the canvas as an outline (outlines do not affect
+     getBoundingClientRect, which pointer coordinates are derived from). */
+  #canvasWrap {
+    line-height: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  #pad {
+    touch-action: none;
+    display: block;
+    background: #000;
+    border-radius: var(--radius);
+    outline: 1px solid var(--line);
+    cursor: crosshair;
+  }
+
+  .row { display: flex; gap: 10px; }
+  .row.mt { margin-top: 10px; }
+
+  button, .btn {
+    appearance: none;
+    -webkit-appearance: none;
+    font: 600 16px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 15px 14px;
+    touch-action: manipulation;
+    cursor: pointer;
+    text-align: center;
+  }
+  button:active { filter: brightness(1.35); }
+  button[disabled] { opacity: .4; cursor: default; }
+  .grow { flex: 1; }
+
+  #save {
+    font-size: 21px;
+    padding: 22px 14px;
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    width: 100%;
+  }
+  #save[disabled] { background: var(--panel-2); border-color: var(--line); }
+
+  .danger { border-color: #6b332f; color: #f0a8a2; }
+
+  /* Below this width the panel stacks under the canvas, so keep Save reachable
+     without scrolling back down. */
+  @media (max-width: 783px) {
+    #save {
+      position: sticky;
+      bottom: 10px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .65);
+    }
+  }
+
+  /* ---------- preview ---------- */
+  .preview-row { display: flex; gap: 12px; align-items: flex-start; }
+  #preview {
+    width: 168px;
+    height: 168px;
+    image-rendering: pixelated;
+    image-rendering: -webkit-optimize-contrast;
+    background: #000;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    flex: 0 0 auto;
+  }
+  .preview-meta { font-size: 12px; color: var(--muted); line-height: 1.55; overflow-wrap: anywhere; }
+  .preview-meta b { color: var(--text); font-weight: 600; }
+
+  /* ---------- fields ---------- */
+  input[type="text"] {
+    width: 100%;
+    font: 17px -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text);
+    background: #0c0e11;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 15px 13px;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+  /* ---------- counts ---------- */
+  .counts {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+  .count-cell {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 7px 4px 6px;
+    text-align: center;
+  }
+  .count-cell .d { font-size: 11px; color: var(--muted); font-weight: 700; }
+  .count-cell .c { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  .count-cell.zero .c { color: #5d6773; }
+
+  .seg { display: flex; gap: 6px; }
+  .seg button {
+    flex: 1;
+    font-size: 13px;
+    padding: 11px 6px;
+  }
+  .seg button[aria-pressed="true"] { background: var(--accent-dim); border-color: var(--accent); }
+
+  .note { font-size: 11.5px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+  /* ---------- toast ---------- */
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: 26px;
+    transform: translate(-50%, 24px);
+    background: #2b3138;
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 13px 22px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .16s ease, transform .16s ease;
+    z-index: 50;
+    max-width: 88vw;
+    text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #toast.ok { border-color: var(--good); }
+  #toast.err { border-color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>MNIST Digit Collector</h1>
+    <span class="sub">28&times;28 &middot; 8-bit grayscale PNG &middot; offline</span>
+  </header>
+
+  <div class="digits" id="digits" role="tablist" aria-label="Digit label"></div>
+
+  <div class="main">
+
+    <div class="col-draw">
+      <div id="canvasWrap"><canvas id="pad"></canvas></div>
+      <div class="row mt">
+        <button class="grow" id="undo">Undo stroke</button>
+        <button class="grow" id="clear">Clear</button>
+      </div>
+      <div class="card" style="margin-top:10px">
+        <h2>Stroke width</h2>
+        <div class="seg" id="strokeSeg">
+          <button data-w="0.075">Thin</button>
+          <button data-w="0.100" aria-pressed="true">Medium</button>
+          <button data-w="0.130">Thick</button>
+        </div>
+        <div class="note">Width scales with the canvas, so the digit lands at roughly 2&ndash;3&nbsp;px once downsampled to 28&times;28.</div>
+      </div>
+    </div>
+
+    <div class="col-side">
+
+      <div class="card">
+        <h2>Output preview (28&times;28)</h2>
+        <div class="preview-row">
+          <canvas id="preview" width="28" height="28"></canvas>
+          <div class="preview-meta" id="previewMeta">Nothing drawn yet.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Person</h2>
+        <input type="text" id="person" placeholder="Name or ID" autocomplete="off"
+               autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done">
+        <div class="row mt">
+          <button class="grow" id="nextPerson">Next person</button>
+        </div>
+        <div class="note" id="slugNote">Saving as <b>anon</b></div>
+      </div>
+
+      <button id="save" disabled>Save digit</button>
+
+      <div class="card">
+        <h2>Saved samples &mdash; <span id="total">0</span> total</h2>
+        <div class="counts" id="counts"></div>
+      </div>
+
+      <div class="card">
+        <h2>Export</h2>
+        <button class="grow" id="download" style="width:100%">Download all (.zip)</button>
+        <div class="row mt">
+          <button class="grow danger" id="erase">Erase all data</button>
+        </div>
+        <div class="note">
+          Everything is stored in this browser (IndexedDB) and survives reloads.
+          The zip contains every PNG plus <code>manifest.csv</code>.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Centering</h2>
+        <div class="seg" id="centerSeg">
+          <button data-mode="mass" aria-pressed="true">Center of mass</button>
+          <button data-mode="bbox">Bounding box</button>
+        </div>
+        <div class="note">
+          MNIST fits the digit in a 20&times;20 box (aspect preserved), then centers it in
+          28&times;28 by its center of mass. That is the default; switch to bounding box
+          for plain geometric centering.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* =====================================================================
+   Binary helpers: CRC-32, Adler-32, stored-block zlib
+   Everything is hand-rolled so the page has zero external dependencies
+   and works with no network at all.
+   ===================================================================== */
+
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(buf) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+function adler32(buf) {
+  let a = 1, b = 0;
+  for (let i = 0; i < buf.length; i++) {
+    a += buf[i]; if (a >= 65521) a -= 65521;
+    b += a;      if (b >= 65521) b -= 65521;
+  }
+  return ((b << 16) | a) >>> 0;
+}
+
+// Valid zlib stream built from uncompressed ("stored") DEFLATE blocks.
+// A 28x28 image is ~810 bytes raw, so skipping real compression costs nothing
+// and avoids depending on CompressionStream.
+function zlibStored(data) {
+  const blocks = Math.max(1, Math.ceil(data.length / 65535));
+  const out = new Uint8Array(2 + blocks * 5 + data.length + 4);
+  let p = 0;
+  out[p++] = 0x78; out[p++] = 0x01;            // CMF/FLG, checksum-valid
+  for (let i = 0; i < blocks; i++) {
+    const off = i * 65535;
+    const len = Math.min(65535, data.length - off);
+    out[p++] = (i === blocks - 1) ? 1 : 0;     // BFINAL, BTYPE=00
+    out[p++] = len & 0xFF;
+    out[p++] = (len >>> 8) & 0xFF;
+    out[p++] = (~len) & 0xFF;
+    out[p++] = ((~len) >>> 8) & 0xFF;
+    out.set(data.subarray(off, off + len), p);
+    p += len;
+  }
+  const ad = adler32(data);
+  out[p++] = (ad >>> 24) & 0xFF;
+  out[p++] = (ad >>> 16) & 0xFF;
+  out[p++] = (ad >>> 8) & 0xFF;
+  out[p++] = ad & 0xFF;
+  return out;
+}
+
+function concatBytes(parts) {
+  let n = 0;
+  for (const p of parts) n += p.length;
+  const out = new Uint8Array(n);
+  let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+}
+
+/* ---------- PNG: 8-bit grayscale, colour type 0 ---------- */
+
+function pngChunk(type, data) {
+  const out = new Uint8Array(12 + data.length);
+  const dv = new DataView(out.buffer);
+  dv.setUint32(0, data.length);
+  for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+  out.set(data, 8);
+  dv.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length)));
+  return out;
+}
+
+function encodeGrayPNG(gray, w, h) {
+  const raw = new Uint8Array((w + 1) * h);
+  for (let y = 0; y < h; y++) {
+    raw[y * (w + 1)] = 0;                       // filter type 0 (None)
+    raw.set(gray.subarray(y * w, (y + 1) * w), y * (w + 1) + 1);
+  }
+  const ihdr = new Uint8Array(13);
+  const dv = new DataView(ihdr.buffer);
+  dv.setUint32(0, w);
+  dv.setUint32(4, h);
+  ihdr[8] = 8;    // bit depth
+  ihdr[9] = 0;    // colour type 0 = grayscale
+  ihdr[10] = 0;   // deflate
+  ihdr[11] = 0;   // adaptive filtering
+  ihdr[12] = 0;   // no interlace
+  return concatBytes([
+    new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
+    pngChunk('IHDR', ihdr),
+    pngChunk('IDAT', zlibStored(raw)),
+    pngChunk('IEND', new Uint8Array(0))
+  ]);
+}
+
+/* ---------- ZIP writer (STORE, no compression) ---------- */
+
+function dosDateTime(d) {
+  return {
+    time: (((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xFFFF),
+    date: ((((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xFFFF)
+  };
+}
+
+function makeZip(files) {
+  const enc = new TextEncoder();
+  const body = [], central = [];
+  let offset = 0;
+
+  for (const f of files) {
+    const name = enc.encode(f.name);
+    const crc = crc32(f.data);
+    const { time, date } = dosDateTime(f.date || new Date());
+    const size = f.data.length;
+
+    const lh = new Uint8Array(30 + name.length);
+    const lv = new DataView(lh.buffer);
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true);        // version needed
+    lv.setUint16(6, 0x0800, true);    // flags: UTF-8 names
+    lv.setUint16(8, 0, true);         // method 0 = stored
+    lv.setUint16(10, time, true);
+    lv.setUint16(12, date, true);
+    lv.setUint32(14, crc, true);
+    lv.setUint32(18, size, true);
+    lv.setUint32(22, size, true);
+    lv.setUint16(26, name.length, true);
+    lv.setUint16(28, 0, true);
+    lh.set(name, 30);
+
+    const ch = new Uint8Array(46 + name.length);
+    const cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);        // version made by
+    cv.setUint16(6, 20, true);        // version needed
+    cv.setUint16(8, 0x0800, true);
+    cv.setUint16(10, 0, true);
+    cv.setUint16(12, time, true);
+    cv.setUint16(14, date, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, size, true);
+    cv.setUint32(24, size, true);
+    cv.setUint16(28, name.length, true);
+    cv.setUint32(42, offset, true);   // relative offset of local header
+    ch.set(name, 46);
+
+    body.push(lh, f.data);
+    central.push(ch);
+    offset += lh.length + size;
+  }
+
+  const cd = concatBytes(central);
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, files.length, true);
+  ev.setUint16(10, files.length, true);
+  ev.setUint32(12, cd.length, true);
+  ev.setUint32(16, offset, true);
+
+  return new Blob([concatBytes(body), cd, eocd], { type: 'application/zip' });
+}
+
+/* =====================================================================
+   IndexedDB
+   ===================================================================== */
+
+const DB_NAME = 'mnist-collector';
+const DB_VERSION = 1;
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const d = req.result;
+      if (!d.objectStoreNames.contains('images')) d.createObjectStore('images', { keyPath: 'filename' });
+      if (!d.objectStoreNames.contains('manifest')) d.createObjectStore('manifest', { keyPath: 'filename' });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function tx(stores, mode, fn) {
+  return new Promise((resolve, reject) => {
+    const t = db.transaction(stores, mode);
+    let result;
+    t.oncomplete = () => resolve(result);
+    t.onerror = () => reject(t.error);
+    t.onabort = () => reject(t.error);
+    result = fn(t);
+  });
+}
+
+function reqAsPromise(r) {
+  return new Promise((resolve, reject) => {
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+
+async function dbPutSample(entry, bytes) {
+  await tx(['images', 'manifest'], 'readwrite', t => {
+    t.objectStore('images').put({ filename: entry.filename, bytes });
+    t.objectStore('manifest').put(entry);
+  });
+}
+
+async function dbGetManifest() {
+  return (await tx(['manifest'], 'readonly', t => reqAsPromise(t.objectStore('manifest').getAll()))) || [];
+}
+
+async function dbGetAllImages() {
+  return await tx(['images'], 'readonly', t => reqAsPromise(t.objectStore('images').getAll()));
+}
+
+async function dbClearAll() {
+  await tx(['images', 'manifest'], 'readwrite', t => {
+    t.objectStore('images').clear();
+    t.objectStore('manifest').clear();
+  });
+}
+
+/* =====================================================================
+   State
+   ===================================================================== */
+
+const state = {
+  digit: 0,
+  strokeRatio: 0.100,     // stroke width as a fraction of canvas size
+  centerMode: 'mass',     // 'mass' | 'bbox'
+  strokes: [],            // [[{x,y}, ...], ...] in normalised [0,1] coords
+  counts: new Array(10).fill(0),
+  trials: new Map(),      // "slug|digit" -> highest trial number used
+  manifestCount: 0,
+  saving: false
+};
+
+const $ = id => document.getElementById(id);
+const pad = $('pad');
+const ctx = pad.getContext('2d', { willReadFrequently: true });
+const preview = $('preview');
+const pctx = preview.getContext('2d');
+
+/* =====================================================================
+   Drawing surface
+   ===================================================================== */
+
+function sizeCanvas() {
+  const wrap = $('canvasWrap');
+  const avail = wrap.clientWidth;
+  const size = Math.max(240, Math.min(480, Math.round(avail)));
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  pad.style.width = size + 'px';
+  pad.style.height = size + 'px';
+  const px = Math.round(size * dpr);
+  if (pad.width !== px || pad.height !== px) {
+    pad.width = px;
+    pad.height = px;
+  }
+  redraw();
+}
+
+function strokePath(points) {
+  const w = pad.width;
+  ctx.lineWidth = w * state.strokeRatio;
+  ctx.strokeStyle = '#fff';
+  ctx.fillStyle = '#fff';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if (points.length === 1) {
+    ctx.beginPath();
+    ctx.arc(points[0].x * w, points[0].y * w, ctx.lineWidth / 2, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+
+  ctx.beginPath();
+  ctx.moveTo(points[0].x * w, points[0].y * w);
+  for (let i = 1; i < points.length - 1; i++) {
+    const mx = (points[i].x + points[i + 1].x) / 2 * w;
+    const my = (points[i].y + points[i + 1].y) / 2 * w;
+    ctx.quadraticCurveTo(points[i].x * w, points[i].y * w, mx, my);
+  }
+  const last = points[points.length - 1];
+  ctx.lineTo(last.x * w, last.y * w);
+  ctx.stroke();
+}
+
+function redraw() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, pad.width, pad.height);
+  for (const s of state.strokes) strokePath(s);
+}
+
+/* ---------- pointer input (Apple Pencil + finger) ---------- */
+
+let activePointer = null;   // id of the pointer currently drawing
+let penDownAt = 0;          // last time a pen pointer was in contact
+
+function normPoint(e) {
+  const r = pad.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) / r.width,
+    y: (e.clientY - r.top) / r.height
+  };
+}
+
+// Palm rejection: while a pen is down (and briefly after), ignore touch input.
+function rejected(e) {
+  if (e.pointerType !== 'touch') return false;
+  return activePointer !== null || (performance.now() - penDownAt) < 1200;
+}
+
+pad.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (activePointer !== null) return;            // one pointer at a time
+  if (rejected(e)) return;
+  if (e.pointerType === 'pen') penDownAt = performance.now();
+
+  activePointer = e.pointerId;
+  try { pad.setPointerCapture(e.pointerId); } catch (_) {}
+
+  const p = normPoint(e);
+  state.strokes.push([p]);
+  strokePath([p]);
+}, { passive: false });
+
+pad.addEventListener('pointermove', e => {
+  if (e.pointerId !== activePointer) return;
+  e.preventDefault();
+  if (e.pointerType === 'pen') penDownAt = performance.now();
+
+  const stroke = state.strokes[state.strokes.length - 1];
+  const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
+  const w = pad.width;
+
+  // Draw incrementally so latency stays low; the smoothed version is
+  // re-rendered on pointerup.
+  ctx.lineWidth = w * state.strokeRatio;
+  ctx.strokeStyle = '#fff';
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  let prev = stroke[stroke.length - 1];
+  ctx.moveTo(prev.x * w, prev.y * w);
+
+  for (const ev of (events.length ? events : [e])) {
+    const p = normPoint(ev);
+    const dx = p.x - prev.x, dy = p.y - prev.y;
+    if (dx * dx + dy * dy < 1e-8) continue;      // drop duplicate samples
+    stroke.push(p);
+    ctx.lineTo(p.x * w, p.y * w);
+    prev = p;
+  }
+  ctx.stroke();
+}, { passive: false });
+
+function endStroke(e) {
+  if (e.pointerId !== activePointer) return;
+  if (e.pointerType === 'pen') penDownAt = performance.now();
+  activePointer = null;
+  try { pad.releasePointerCapture(e.pointerId); } catch (_) {}
+  redraw();          // repaint with quadratic smoothing
+  updatePreview();
+}
+
+pad.addEventListener('pointerup', endStroke);
+pad.addEventListener('pointercancel', endStroke);
+pad.addEventListener('lostpointercapture', e => { if (e.pointerId === activePointer) endStroke(e); });
+
+// Block Safari's pinch-zoom / double-tap zoom over the whole page.
+for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {
+  document.addEventListener(type, e => e.preventDefault(), { passive: false });
+}
+document.addEventListener('touchmove', e => {
+  if (e.target === pad) e.preventDefault();
+}, { passive: false });
+
+/* =====================================================================
+   Preprocessing: bounding box -> 20x20 area-average -> centred 28x28
+   ===================================================================== */
+
+// Box filter ("area averaging") resize of a sub-rectangle of a grayscale
+// buffer. Fractional pixel coverage is weighted, giving the anti-aliased
+// edges real MNIST digits have.
+function areaResize(src, sw, sh, rx, ry, rw, rh, dw, dh) {
+  const dst = new Float32Array(dw * dh);
+  const sx = rw / dw, sy = rh / dh;
+
+  for (let dy = 0; dy < dh; dy++) {
+    const fy0 = ry + dy * sy, fy1 = fy0 + sy;
+    const iy0 = Math.floor(fy0), iy1 = Math.ceil(fy1);
+    for (let dx = 0; dx < dw; dx++) {
+      const fx0 = rx + dx * sx, fx1 = fx0 + sx;
+      const ix0 = Math.floor(fx0), ix1 = Math.ceil(fx1);
+      let acc = 0, wsum = 0;
+      for (let y = iy0; y < iy1; y++) {
+        const wy = Math.min(y + 1, fy1) - Math.max(y, fy0);
+        if (wy <= 0) continue;
+        const yy = y < 0 ? 0 : (y >= sh ? sh - 1 : y);
+        for (let x = ix0; x < ix1; x++) {
+          const wx = Math.min(x + 1, fx1) - Math.max(x, fx0);
+          if (wx <= 0) continue;
+          const xx = x < 0 ? 0 : (x >= sw ? sw - 1 : x);
+          const w = wx * wy;
+          acc += src[yy * sw + xx] * w;
+          wsum += w;
+        }
+      }
+      dst[dy * dw + dx] = wsum > 0 ? acc / wsum : 0;
+    }
+  }
+  return dst;
+}
+
+const INK_THRESHOLD = 16;   // 0-255; anything above this counts as drawn
+
+function processCanvas() {
+  const W = pad.width, H = pad.height;
+  const data = ctx.getImageData(0, 0, W, H).data;
+
+  const gray = new Uint8Array(W * H);
+  let minX = W, minY = H, maxX = -1, maxY = -1;
+
+  for (let y = 0, i = 0; y < H; y++) {
+    for (let x = 0; x < W; x++, i++) {
+      const v = data[i * 4];                    // R channel; image is grayscale
+      gray[i] = v;
+      if (v > INK_THRESHOLD) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  if (maxX < 0) return null;                    // nothing drawn
+
+  // 1-2. Crop to the ink bounding box with a small margin.
+  const margin = Math.max(1, Math.round(Math.min(W, H) * 0.01));
+  const x0 = Math.max(0, minX - margin);
+  const y0 = Math.max(0, minY - margin);
+  const x1 = Math.min(W - 1, maxX + margin);
+  const y1 = Math.min(H - 1, maxY + margin);
+  const cw = x1 - x0 + 1, chh = y1 - y0 + 1;
+
+  // 3. Fit inside a 20x20 box, aspect preserved, via area averaging.
+  const scale = 20 / Math.max(cw, chh);
+  const dw = Math.max(1, Math.min(20, Math.round(cw * scale)));
+  const dh = Math.max(1, Math.min(20, Math.round(chh * scale)));
+  const small = areaResize(gray, W, H, x0, y0, cw, chh, dw, dh);
+
+  // 4. Paste centred on a 28x28 black field.
+  let ox, oy;
+  if (state.centerMode === 'mass') {
+    let sum = 0, sx = 0, sy = 0;
+    for (let y = 0; y < dh; y++) {
+      for (let x = 0; x < dw; x++) {
+        const v = small[y * dw + x];
+        sum += v; sx += v * (x + 0.5); sy += v * (y + 0.5);
+      }
+    }
+    const cx = sum > 0 ? sx / sum : dw / 2;
+    const cy = sum > 0 ? sy / sum : dh / 2;
+    ox = Math.round(14 - cx);
+    oy = Math.round(14 - cy);
+  } else {
+    ox = Math.round((28 - dw) / 2);
+    oy = Math.round((28 - dh) / 2);
+  }
+  ox = Math.max(0, Math.min(28 - dw, ox));
+  oy = Math.max(0, Math.min(28 - dh, oy));
+
+  const out = new Uint8Array(28 * 28);
+  for (let y = 0; y < dh; y++) {
+    for (let x = 0; x < dw; x++) {
+      let v = Math.round(small[y * dw + x]);
+      if (v < 0) v = 0; else if (v > 255) v = 255;
+      out[(oy + y) * 28 + (ox + x)] = v;
+    }
+  }
+  return { pixels: out, w: dw, h: dh, box: [cw, chh] };
+}
+
+let lastProcessed = null;
+
+function updatePreview() {
+  lastProcessed = processCanvas();
+  const img = pctx.createImageData(28, 28);
+  if (lastProcessed) {
+    for (let i = 0; i < 28 * 28; i++) {
+      const v = lastProcessed.pixels[i];
+      img.data[i * 4] = v;
+      img.data[i * 4 + 1] = v;
+      img.data[i * 4 + 2] = v;
+      img.data[i * 4 + 3] = 255;
+    }
+  } else {
+    for (let i = 0; i < 28 * 28; i++) img.data[i * 4 + 3] = 255;
+  }
+  pctx.putImageData(img, 0, 0);
+
+  $('save').disabled = !lastProcessed || state.saving || !db;
+  refreshMeta();
+}
+
+/* =====================================================================
+   Naming and persistence
+   ===================================================================== */
+
+function slugify(name) {
+  const s = String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return s || 'anon';
+}
+
+function currentSlug() { return slugify($('person').value); }
+
+function nextTrial(slug, digit) {
+  return (state.trials.get(slug + '|' + digit) || 0) + 1;
+}
+
+function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+function nextFilename() {
+  const slug = currentSlug();
+  return slug + '_' + state.digit + '_' + pad2(nextTrial(slug, state.digit)) + '.png';
+}
+
+function refreshMeta() {
+  const slug = currentSlug();
+  $('slugNote').innerHTML = 'Saving as <b>' + slug + '</b>';
+  const meta = $('previewMeta');
+  if (!lastProcessed) {
+    meta.textContent = 'Nothing drawn yet.';
+  } else {
+    meta.innerHTML =
+      'Digit <b>' + state.digit + '</b><br>' +
+      'Fitted to <b>' + lastProcessed.w + '&times;' + lastProcessed.h + '</b> in 28&times;28<br>' +
+      'Next file: <b>' + nextFilename() + '</b>';
+  }
+}
+
+function renderCounts() {
+  const el = $('counts');
+  el.innerHTML = '';
+  for (let d = 0; d < 10; d++) {
+    const cell = document.createElement('div');
+    cell.className = 'count-cell' + (state.counts[d] === 0 ? ' zero' : '');
+    cell.innerHTML = '<div class="d">' + d + '</div><div class="c">' + state.counts[d] + '</div>';
+    el.appendChild(cell);
+  }
+  $('total').textContent = state.manifestCount;
+}
+
+function renderDigits() {
+  const el = $('digits');
+  el.innerHTML = '';
+  for (let d = 0; d < 10; d++) {
+    const b = document.createElement('button');
+    b.className = 'digit-tab';
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-selected', String(d === state.digit));
+    b.innerHTML = d + '<span class="n">' + state.counts[d] + '</span>';
+    b.addEventListener('click', () => selectDigit(d));
+    el.appendChild(b);
+  }
+}
+
+function refreshDigitTabs() {
+  const tabs = $('digits').children;
+  for (let d = 0; d < 10; d++) {
+    tabs[d].setAttribute('aria-selected', String(d === state.digit));
+    tabs[d].querySelector('.n').textContent = state.counts[d];
+  }
+}
+
+function selectDigit(d) {
+  state.digit = d;
+  clearCanvas();
+  refreshDigitTabs();
+}
+
+function clearCanvas() {
+  state.strokes = [];
+  redraw();
+  updatePreview();
+}
+
+/* =====================================================================
+   Toast
+   ===================================================================== */
+
+let toastTimer = null;
+function toast(msg, kind) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'show' + (kind ? ' ' + kind : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 1700);
+}
+
+/* =====================================================================
+   Save / export
+   ===================================================================== */
+
+async function save() {
+  if (state.saving) return;
+  if (!lastProcessed) { toast('Draw a digit first', 'err'); return; }
+
+  state.saving = true;
+  $('save').disabled = true;
+
+  try {
+    const slug = currentSlug();
+    const digit = state.digit;
+    const trial = nextTrial(slug, digit);
+    const filename = slug + '_' + digit + '_' + pad2(trial) + '.png';
+    const entry = {
+      filename,
+      person: $('person').value.trim(),
+      digit,
+      timestamp: new Date().toISOString()
+    };
+    const bytes = encodeGrayPNG(lastProcessed.pixels, 28, 28);
+
+    await dbPutSample(entry, bytes);
+
+    state.trials.set(slug + '|' + digit, trial);
+    state.counts[digit]++;
+    state.manifestCount++;
+
+    renderCounts();
+    refreshDigitTabs();
+    clearCanvas();
+    toast('Saved ' + filename, 'ok');
+  } catch (err) {
+    console.error(err);
+    toast('Save failed: ' + (err && err.message ? err.message : err), 'err');
+  } finally {
+    state.saving = false;
+    updatePreview();
+  }
+}
+
+function csvField(v) {
+  return '"' + String(v).replace(/"/g, '""') + '"';
+}
+
+async function downloadZip() {
+  const btn = $('download');
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = 'Building zip…';
+  try {
+    const [manifest, images] = await Promise.all([dbGetManifest(), dbGetAllImages()]);
+    if (!manifest.length) { toast('Nothing saved yet', 'err'); return; }
+
+    manifest.sort((a, b) => a.filename < b.filename ? -1 : a.filename > b.filename ? 1 : 0);
+    const byName = new Map(images.map(r => [r.filename, r.bytes]));
+
+    const files = [];
+    const rows = ['filename,person,digit,timestamp'];
+    for (const m of manifest) {
+      const bytes = byName.get(m.filename);
+      if (!bytes) continue;
+      files.push({
+        name: m.filename,
+        data: bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes),
+        date: new Date(m.timestamp)
+      });
+      rows.push([csvField(m.filename), csvField(m.person), m.digit, csvField(m.timestamp)].join(','));
+    }
+    files.push({
+      name: 'manifest.csv',
+      data: new TextEncoder().encode(rows.join('\n') + '\n'),
+      date: new Date()
+    });
+
+    const blob = makeZip(files);
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mnist-digits-' + stamp + '.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    toast('Exported ' + (files.length - 1) + ' images', 'ok');
+  } catch (err) {
+    console.error(err);
+    toast('Export failed: ' + (err && err.message ? err.message : err), 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+async function eraseAll() {
+  if (!state.manifestCount) { toast('Nothing to erase'); return; }
+  const msg = 'Delete all ' + state.manifestCount + ' saved images?\n\nThis cannot be undone. ' +
+              'Download the zip first if you have not already.';
+  if (!window.confirm(msg)) return;
+  try {
+    await dbClearAll();
+    state.counts = new Array(10).fill(0);
+    state.trials.clear();
+    state.manifestCount = 0;
+    renderCounts();
+    refreshDigitTabs();
+    refreshMeta();
+    toast('All data erased', 'ok');
+  } catch (err) {
+    console.error(err);
+    toast('Erase failed', 'err');
+  }
+}
+
+/* =====================================================================
+   Wiring
+   ===================================================================== */
+
+$('undo').addEventListener('click', () => {
+  if (!state.strokes.length) return;
+  state.strokes.pop();
+  redraw();
+  updatePreview();
+});
+
+$('clear').addEventListener('click', clearCanvas);
+$('save').addEventListener('click', save);
+$('download').addEventListener('click', downloadZip);
+$('erase').addEventListener('click', eraseAll);
+
+$('nextPerson').addEventListener('click', () => {
+  $('person').value = '';
+  localStorage.removeItem('mnist-collector-person');
+  clearCanvas();
+  selectDigit(0);
+  refreshMeta();
+  $('person').focus();
+  toast('Ready for the next person');
+});
+
+$('person').addEventListener('input', () => {
+  localStorage.setItem('mnist-collector-person', $('person').value);
+  refreshMeta();
+});
+$('person').addEventListener('keydown', e => { if (e.key === 'Enter') $('person').blur(); });
+
+$('strokeSeg').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  for (const el of $('strokeSeg').children) el.setAttribute('aria-pressed', String(el === b));
+  state.strokeRatio = parseFloat(b.dataset.w);
+  redraw();
+  updatePreview();
+});
+
+$('centerSeg').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  for (const el of $('centerSeg').children) el.setAttribute('aria-pressed', String(el === b));
+  state.centerMode = b.dataset.mode;
+  updatePreview();
+});
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(sizeCanvas, 120);
+});
+window.addEventListener('orientationchange', () => setTimeout(sizeCanvas, 250));
+
+/* ---------- boot ---------- */
+
+async function boot() {
+  renderDigits();
+  renderCounts();
+
+  const saved = localStorage.getItem('mnist-collector-person');
+  if (saved) $('person').value = saved;
+
+  sizeCanvas();
+  updatePreview();
+
+  try {
+    db = await openDB();
+    const manifest = await dbGetManifest();
+    for (const m of manifest) {
+      if (m.digit >= 0 && m.digit <= 9) state.counts[m.digit]++;
+      const match = /^(.*)_(\d)_(\d+)\.png$/.exec(m.filename);
+      if (match) {
+        const key = match[1] + '|' + Number(match[2]);
+        const trial = Number(match[3]);
+        if (trial > (state.trials.get(key) || 0)) state.trials.set(key, trial);
+      }
+    }
+    state.manifestCount = manifest.length;
+    renderCounts();
+    refreshDigitTabs();
+    updatePreview();   // also re-enables Save now that storage is ready
+    if (manifest.length) toast('Restored ' + manifest.length + ' saved samples');
+  } catch (err) {
+    console.error(err);
+    toast('Storage unavailable — saves will fail', 'err');
+  }
+
+  // Ask the browser not to evict this origin's data mid-session.
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().catch(() => {});
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
