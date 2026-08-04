@@ -29,13 +29,10 @@ void dma_packet_stream_init(void) {
     packet_program_offset = offset;
     packet_sm = pio_claim_unused_sm(packet_pio, true);
 
-    /*
-     * A divider of 1 runs PIO at the 125 MHz system clock. With the current
-     * 40-cycle waveform, effective SCLK is approximately 3.125 MHz.
-     */
+    /* 125 MHz / 1.0416667 / 12 PIO cycles = nominal 10 MHz SCLK. */
     sendpckt_init(packet_pio, packet_sm, offset,
                   BUS_D0_PIN, BUS_SCLK_PIN, BUS_CS_PIN,
-                  NXTPCKT_TO_PI_PIN, 1.0f);
+                  NXTPCKT_TO_PI_PIN, 1.0416667f);
 
     irq_set_exclusive_handler(PIO0_IRQ_0, packet_complete_irq);
     pio_set_irq0_source_enabled(packet_pio, pis_interrupt0, true);

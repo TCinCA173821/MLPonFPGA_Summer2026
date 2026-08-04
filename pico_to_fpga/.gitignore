@@ -1,2 +1,8 @@
-build
-!.vscode/*
+# Generated CMake/Pico SDK build trees.
+build/
+cs_nxt_test/build_ready/
+cs_nxt_test/build_final/
+cs_nxt_test/build_pico/
+
+# Local editor configuration.
+.vscode/

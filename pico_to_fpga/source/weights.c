@@ -1,13 +1,13 @@
 #include "weights.h"
 
 /*
- * Auto-generated from quantized_model.pth by export_weights.py.
+ * this is from export_weights.py.
  *
- * layer_one and layer_two contain signed INT4 weights stored in int8_t
- * elements. form_packet() converts each value to its low four-bit
- * two's-complement representation and places it in the upper nibble.
+ * layer_one and layer_two contain signed INT4 weights stored in int8_t elements
+ * form_packet() converts each value to its low four-bit
+ * two's-complement representation and places it in the upper nibble
  *
- * Biases are stored as signed INT8 values.
+ * Biases are signed INT8 values.
  */
 
 const int8_t layer_one[LAYER_ONE_WEIGHT_COUNT] = {

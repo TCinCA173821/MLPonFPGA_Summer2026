@@ -16,14 +16,14 @@
     wait 1 gpio 13          side 0b00
     pull block              side 0b00
 byte_loop:
-    ; Two delayed instructions per phase preserve the timing margin proven by
-    ; the slow GPIO test. At the configured divider each phase is about 8 ms.
-    out pins, 8             side 0b10 [7]
-    nop                     side 0b10 [7]
-    nop                     side 0b11 [7]
-    nop                     side 0b11 [7]
-    jmp !osre byte_loop     side 0b10 [7]
-    nop                     side 0b10 [7]
+    ; Twelve PIO cycles per byte clock: six low, five high, and the one-cycle
+    ; loop branch low. With a 125 MHz system clock and divider 1.0416667,
+    ; this produces a nominal 10 MHz SCLK.
+    out pins, 8             side 0b10 [2]
+    nop                     side 0b10 [2]
+    nop                     side 0b11 [1]
+    nop                     side 0b11 [2]
+    jmp !osre byte_loop     side 0b10
     wait 0 gpio 13          side 0b10
     nop                     side 0b00 [7]
     ; Stall until the CPU interrupt handler records and clears completion.
