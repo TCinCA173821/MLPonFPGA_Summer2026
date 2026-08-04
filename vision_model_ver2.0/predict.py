@@ -16,7 +16,7 @@ from integer_inference import (
 
 BASE_DIR = Path(__file__).resolve().parent
 
-IMAGE_PATH = BASE_DIR / "demo_images" / "input9.png"
+IMAGE_PATH = BASE_DIR / "demo_images" / "224input.png"
 MODEL_PATH = BASE_DIR / "models" / "quantized_model.pth"
 
 
@@ -33,9 +33,7 @@ def main() -> None:
             f"Run train.py and quantize.py first."
         )
 
-    # --------------------------------------------------
     # Load and preprocess image
-    # --------------------------------------------------
 
     image = Image.open(IMAGE_PATH).convert("L")
 
@@ -61,9 +59,7 @@ def main() -> None:
         image_tensor.max().item(),
     )
 
-    # --------------------------------------------------
     # Load FPGA-compatible integer parameters
-    # --------------------------------------------------
 
     model_state = torch.load(
         MODEL_PATH,

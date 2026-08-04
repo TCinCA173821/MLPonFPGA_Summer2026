@@ -5,10 +5,8 @@ from torch.utils.data import DataLoader
 
 from preprocess import load_mnist
 
-
-# --------------------------------------------------
 # File paths
-# --------------------------------------------------
+
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_DIR = BASE_DIR / "models"
@@ -16,9 +14,7 @@ MODEL_DIR = BASE_DIR / "models"
 QUANTIZED_MODEL_PATH = MODEL_DIR / "quantized_model.pth"
 
 
-# --------------------------------------------------
-# Network and hardware specifications
-# --------------------------------------------------
+# Network and hardware speci
 
 BATCH_SIZE = 256
 
@@ -44,10 +40,9 @@ RELU_MAX = 15
 
 def wrap_to_int16(values: torch.Tensor) -> torch.Tensor:
     """
-    Reproduce signed 16-bit two's-complement overflow.
+    Reproduce signed 16-bit two's-complement overflow
 
-    SystemVerilog's 16-bit accumulator discards bits above bit 15.
-    This function reproduces that behavior.
+    SystemVerilog's 16-bit accumulator discards bits above bit 15
     """
     values = values.to(torch.int64)
 
@@ -60,13 +55,15 @@ def wrap_to_int16(values: torch.Tensor) -> torch.Tensor:
 
 
 def validate_quantized_model(model_state: dict) -> None:
-    """Verify that all model parameters match the FPGA bit limits."""
+    """Verify that all model parameters match the FPGA bit limits"""
     required_keys = {
         "fc1.weight",
         "fc1.bias",
         "fc2.weight",
         "fc2.bias",
     }
+
+
 
     missing_keys = required_keys - set(model_state.keys())
 
@@ -81,11 +78,14 @@ def validate_quantized_model(model_state: dict) -> None:
     fc2_weight = model_state["fc2.weight"]
     fc2_bias = model_state["fc2.bias"]
 
+
+
     if tuple(fc1_weight.shape) != (HIDDEN_SIZE, INPUT_SIZE):
         raise ValueError(
             "fc1.weight must have shape "
             f"({HIDDEN_SIZE}, {INPUT_SIZE}), "
             f"but received {tuple(fc1_weight.shape)}."
+
         )
 
     if tuple(fc1_bias.shape) != (HIDDEN_SIZE,):
@@ -93,6 +93,7 @@ def validate_quantized_model(model_state: dict) -> None:
             "fc1.bias must have shape "
             f"({HIDDEN_SIZE},), "
             f"but received {tuple(fc1_bias.shape)}."
+            
         )
 
     if tuple(fc2_weight.shape) != (OUTPUT_SIZE, HIDDEN_SIZE):
@@ -141,27 +142,7 @@ def integer_mac_layer(
     weights: torch.Tensor,
     biases: torch.Tensor,
 ) -> torch.Tensor:
-    """
-    Simulate one FPGA MAC layer.
-
-    Hardware operation for every output neuron:
-
-        accumulator = signed 8-bit bias
-
-        for every input:
-            accumulator = accumulator + input * weight
-
-    Specifications:
-        input:       unsigned 4-bit
-        weight:      signed 4-bit
-        bias:        signed 8-bit
-        accumulator: signed 16-bit
-
-    Returns:
-        Signed integer accumulator values with shape:
-
-            [batch_size, number_of_output_neurons]
-    """
+    
     inputs = inputs.to(torch.int32)
     weights = weights.to(torch.int32)
     biases = biases.to(torch.int32)

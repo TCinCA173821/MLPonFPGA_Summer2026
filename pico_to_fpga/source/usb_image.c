@@ -6,13 +6,11 @@
 #include "pico/stdio_usb.h"
 
 /*
- * Laptop-to-Pico frame format:
+ * Laptop-to-Pico frame   format
  *
  *   byte 0-3: ASCII "IMG1"
  *   byte 4-199: 196 pixels, one pixel per byte in the low nibble
  *
- * A fixed header lets the Pico recover alignment if the laptop reconnects or
- * an incomplete transfer is abandoned. Image length is fixed by the model.
  */
 static const uint8_t image_header[4] = {'I', 'M', 'G', '1'};
 
@@ -33,7 +31,9 @@ static void wait_for_image_header(void) {
         } else if (value == image_header[0]) {
             /* This byte could already be the beginning of a new "IMG1". */
             matched = 1u;
-        } else {
+
+
+        } else  {
             matched = 0u;
         }
     }
@@ -45,9 +45,15 @@ void usb_receive_image(uint8_t destination[IMAGE_PIXEL_COUNT]) {
     /* Do not print READY until a laptop has actually opened the USB COM port. */
     while (!stdio_usb_connected()) {
         sleep_ms(10);
+
+
+
     }
 
     printf("READY\n");
+
+
+
     wait_for_image_header();
 
     for (i = 0; i < IMAGE_PIXEL_COUNT; i++) {
@@ -55,8 +61,10 @@ void usb_receive_image(uint8_t destination[IMAGE_PIXEL_COUNT]) {
          * The mask guarantees 0000PPPP even if a sender accidentally leaves
          * nonzero bits in the unused upper nibble.
          */
+
         destination[i] = (uint8_t)(read_usb_byte() & 0x0Fu);
     }
+
 
     printf("IMAGE_OK\n");
 }
